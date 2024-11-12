@@ -65,9 +65,6 @@ public partial class ItalianCharmBraceletContext : DbContext
             entity.Property(e => e.Img)
                 .HasMaxLength(50)
                 .HasColumnName("IMG");
-            entity.Property(e => e.Link)
-                .HasMaxLength(50)
-                .HasColumnName("LINK");
             entity.Property(e => e.Name)
                 .HasMaxLength(50)
                 .HasColumnName("NAME");

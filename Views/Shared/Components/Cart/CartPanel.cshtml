@@ -1,0 +1,6 @@
+﻿@model ItalianCharmBracelet.ViewModels.CartVM
+
+<a asp-controller="Cart" asp-action="Index" class="position-relative me-4 my-auto">
+    <i class="fa fa-shopping-bag fa-2x"></i>
+    <span id="cart-panel" class="position-absolute bg-secondary rounded-circle d-flex align-items-center justify-content-center text-light px-1">@Model.Quantity</span>
+</a>
