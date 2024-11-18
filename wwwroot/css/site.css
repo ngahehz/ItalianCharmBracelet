@@ -33,3 +33,14 @@ input::-webkit-inner-spin-button {
 input[type=number] {
     -moz-appearance: textfield;
 }
+
+.content-section {
+    transition: opacity 0.3s ease-in-out;
+}
+
+    .content-section.hidden {
+        opacity: 0;
+        pointer-events: none; /* Khong cho phep tuong tac */
+        position: absolute; /* giu vi tri de tranh tao khoang trong */
+    }
+

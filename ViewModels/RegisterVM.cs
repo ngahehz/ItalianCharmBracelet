@@ -4,56 +4,25 @@ namespace ItalianCharmBracelet.ViewModels
 {
     public class RegisterVM
     {
+        [Required(ErrorMessage = "*")]
         [Display(Name = "Username")]
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "*")]
         [MaxLength(20, ErrorMessage = "Tối đa 20 ký tự")]
-        public string Id { get; set; }
+        public string Username { get; set; }
 
-
-        [Display(Name = "Password")]
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "*")]
+        [Required(ErrorMessage = "*")]
         [DataType(DataType.Password)]
+        [Display(Name = "Password")]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters long")]
         public string Password { get; set; }
 
+        [Required(ErrorMessage = "Confirm password is required")]
+        [DataType(DataType.Password)]
+        [Compare("Password", ErrorMessage = "Password and confirmation password do not match")]
+        public string ConfirmPassword { get; set; }
 
-        [Display(Name = "Họ tên")]
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "*")]
-        [MaxLength(50, ErrorMessage = "Tối đa 50 ký tự")]
-        public string FirstName { get; set; }
-
-        [Display(Name = "Họ tên")]
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "*")]
-        [MaxLength(50, ErrorMessage = "Tối đa 50 ký tự")]
-        public string LastName { get; set; }
-
-        public bool Gender { get; set; } = true;
-
-        [Display(Name = "Ngày sinh")]
-        [DataType(DataType.Date)]
-        public DateTime? DoB { get; set; }
-
-        [Display(Name = "Địa chỉ")]
-        [MaxLength(60, ErrorMessage = "Tối đa 60 ký tự")]
-        public string Address { get; set; }
-
-        [Display(Name = "Số điện thoại")]
-        [MaxLength(24, ErrorMessage = "Tối đa 24 ký tự")]
-        [RegularExpression("^[0-9]{9,12}$", ErrorMessage = "Số điện thoại không hợp lệ")]
-        public string Cell { get; set; }
-
-
+        [Required(ErrorMessage = "*")]
         [EmailAddress(ErrorMessage = "Email không hợp lệ")]
         public string Email { get; set; }
-
-
-        public string? Img { get; set; }
-
-
-        public int Role { get; set; }
-
-
-        public bool State { get; set; }
-
 
         public string? RandomKey { get; set; }
     }

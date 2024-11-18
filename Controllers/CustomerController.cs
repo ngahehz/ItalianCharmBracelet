@@ -30,56 +30,52 @@ namespace ItalianCharmBracelet.Controllers
         [HttpGet]
         public IActionResult Register()
         {
-            return View();
+            return PartialView();
         }
 
         [HttpPost]
-        public IActionResult Register(RegisterVM model, IFormFile Hinh)
+        public IActionResult Register(RegisterVM model)
         {
             if (ModelState.IsValid)
             {
                 try
                 {
                     var khachHang = _mapper.Map<Customer>(model);
+                    khachHang.Id = Util.GenerateID(_context, "KH");
                     khachHang.RandomKey = Util.GenerateRandomKey();
                     khachHang.Password = model.Password.ToMd5Hash(khachHang.RandomKey);
                     khachHang.Role = "0";
                     khachHang.State = "True";//sẽ xử lý khi dùng Mail để active //SOS SOS SOS
 
-                    if (Hinh != null)
-                    {
-                        khachHang.Img = Util.UploadImg(Hinh, "KhachHang");
-                    }
-
                     _context.Add(khachHang);
                     _context.SaveChanges();
-                    return RedirectToAction("Index", "Home");
+                    return Json(new { success = true, message = "Registration successful. Please check your email for activation." });
 
                 }
                 catch (Exception ex)
                 {
-                    ModelState.AddModelError("", ex.Message);
+                    return Json(new { success = false, message = ex.Message + "exc" });
                 }
             }
-            return View();
+            var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+            return Json(new { success = false, message = errors+"dd" });
+            return PartialView("Register", model);
         }
         #endregion
 
         #region Login
         [HttpGet]
-        public IActionResult Login(string? ReturnUrl)
+        public IActionResult Login()
         {
-            ViewBag.ReturnUrl = ReturnUrl;
-            return View();
+            return PartialView();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(LoginVM model, string? ReturnUrl)
+        public async Task<IActionResult> Login(LoginVM model)
         {
-            ViewBag.ReturnUrl = ReturnUrl;
             if (ModelState.IsValid)
             {
-                var khachHang = _context.Customers.SingleOrDefault(x => x.Id == model.Username);
+                var khachHang = _context.Customers.SingleOrDefault(x => x.Username == model.Username);
                 if (khachHang != null)
                 {
                     if (khachHang.State == "False")
@@ -93,25 +89,22 @@ namespace ItalianCharmBracelet.Controllers
                             var claims = new List<Claim>
                             {
                                 new Claim(ClaimTypes.Email, khachHang.Email),
-                                new Claim(ClaimTypes.Role, "Customer")
+                                new Claim(ClaimTypes.Role, "Customer"),
+                                new Claim(MySetting.CLAIM_CUSTOMER, khachHang.Id)
                             };
                             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                             var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
                             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal);
 
-                            if (Url.IsLocalUrl(ReturnUrl))
-                            {
-                                return Redirect(ReturnUrl);
-                            }
-                            return Redirect("/");
+                            return Json(new { success = true });
                         }
-                        ModelState.AddModelError("", "Username or password is incorrect");
+                        ModelState.AddModelError("", "Username or password is incorrect1");
                     }
                 }
                 // không có tài khoản
-                ModelState.AddModelError("", "Username or password is incorrect");
+                ModelState.AddModelError("", "Username or password is incorrect2");
             }
-            return View();
+            return PartialView("Login", model);
         }
         #endregion
 

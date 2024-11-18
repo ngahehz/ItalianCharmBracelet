@@ -2,6 +2,7 @@
 using ItalianCharmBracelet.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using X.PagedList;
 
 namespace ItalianCharmBracelet.Controllers
 {
@@ -12,15 +13,20 @@ namespace ItalianCharmBracelet.Controllers
         {
             _context = context;
         }
-        public IActionResult Index(string? cate)
+        public IActionResult Index(string? cate, int? page)
         {
+            int pageSize = 18;
+            int pageNumber = page == null || page < 0 ? 1 : page.Value;
+
             var charms = _context.Charms.AsQueryable();
             if (!string.IsNullOrEmpty(cate))
             {
                 charms = charms.Where(p => p.CateId == cate);
             }
             var result = charms.Select(p => new InfoProductVM(p.Id, p.Name, p.Price ?? 0, p.Img ?? "", p.CateId ?? "", p.Cate.Name));
-            return View(result);
+            PagedList<InfoProductVM> list = new PagedList<InfoProductVM>(result, pageNumber, pageSize);
+            ViewData["cate"] = cate;
+            return View(list);
         }
 
         public IActionResult Search(string? query)

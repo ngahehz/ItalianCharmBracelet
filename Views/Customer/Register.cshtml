@@ -1,0 +1,59 @@
+﻿@model ItalianCharmBracelet.ViewModels.RegisterVM
+
+
+<form method="post" id="registerForm">
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+    <div>
+        <label asp-for="@Model.Username" class="form-label" style="margin-bottom: 0.2rem;"></label><sup>*</sup>
+        <input asp-for="@Model.Username" class="form-control" style="margin-top: 0.2rem;">
+        <span asp-validation-for="@Model.Username" class="text-danger"></span>
+    </div>
+    <div>
+        <label asp-for="@Model.Password" class="form-label mt-3" style="margin-bottom: 0.2rem;"></label><sup>*</sup>
+        <input asp-for="@Model.Password" class="form-control" style="margin-top: 0.2rem;">
+        <span asp-validation-for="@Model.Password" class="text-danger"></span>
+    </div>
+    <div>
+        <label asp-for="@Model.ConfirmPassword" class="form-label mt-3" style="margin-bottom: 0.2rem;"></label><sup>*</sup>
+        <input asp-for="@Model.ConfirmPassword" class="form-control" style="margin-top: 0.2rem;">
+        <span asp-validation-for="@Model.ConfirmPassword" class="text-danger"></span>
+    </div>
+    <div>
+        <label asp-for="@Model.Email" class="form-label mt-3" style="margin-bottom: 0.2rem;"></label><sup>*</sup>
+        <input asp-for="@Model.Email" class="form-control" style="margin-top: 0.2rem;">
+        <span asp-validation-for="@Model.Email" class="text-danger"></span>
+    </div>
+    <div class="form-check d-flex justify-content-center mb-4">
+        <input class="form-check-input me-2" type="checkbox" value="" id="form2Example33" checked />
+        <label class="form-check-label" for="form2Example33">
+            Subscribe to our newsletter
+        </label>
+    </div>
+
+    <div class="d-flex justify-content-center">
+        <button type="submit" class="btn btn-outline-danger px-5">Sign up</button>
+    </div>
+</form>
+
+<div class="text-center">
+    <p>or sign up with:</p>
+    <button type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-link btn-floating mx-1">
+        <i class="fab fa-facebook-f"></i>
+    </button>
+
+    <button type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-link btn-floating mx-1">
+        <i class="fab fa-google"></i>
+    </button>
+
+    <button type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-link btn-floating mx-1">
+        <i class="fab fa-twitter"></i>
+    </button>
+
+    <button type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-link btn-floating mx-1">
+        <i class="fab fa-github"></i>
+    </button>
+</div>
+
+
+

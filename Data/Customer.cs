@@ -11,7 +11,7 @@ public partial class Customer
 
     public string Password { get; set; } = null!;
 
-    public string FirstName { get; set; } = null!;
+    public string? FirstName { get; set; }
 
     public string? LastName { get; set; }
 
@@ -32,4 +32,6 @@ public partial class Customer
     public string State { get; set; } = null!;
 
     public string? RandomKey { get; set; }
+
+    public virtual ICollection<SalesInvoice> SalesInvoices { get; set; } = new List<SalesInvoice>();
 }

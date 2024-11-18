@@ -2,6 +2,7 @@
 using ItalianCharmBracelet.Data;
 using ItalianCharmBracelet.ViewModels;
 using ItalianCharmBracelet.Helpers;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ItalianCharmBracelet.Controllers
 {
@@ -97,6 +98,68 @@ namespace ItalianCharmBracelet.Controllers
                 message = "Sản phẩm đã được xóa khỏi giỏ hàng",
                 gioHang = new { quantity = gioHang.Sum(p => p.Quantity) }
             });
+        }
+
+        [Authorize]
+        [HttpGet]
+        public IActionResult Checkout()
+        {
+            if (Cart.Count == 0)
+            {
+                return RedirectToAction("Index");
+            }
+            return View(Cart);
+        }
+
+        [Authorize]
+        [HttpPost]
+        public IActionResult Checkout(CheckoutVM model)
+        {
+            if (ModelState.IsValid)
+            {
+                var customerId = HttpContext.User.Claims.SingleOrDefault(p => p.Type == MySetting.CLAIM_CUSTOMER).Value;
+                var hoadon = new SalesInvoice()
+                {
+                    Id = Util.GenerateID(_context, "HDB"),
+                    CustomerId = customerId,
+                    Name = model.Name,
+                    Address = model.Address,
+                    Cell = model.Cell,
+                    Note = model.Note,
+                    Date = DateOnly.FromDateTime(DateTime.Now),
+                    StateId = "0",
+                    PaymentMethod = "COD",
+                    TotalPayment = Cart.Sum(p => p.Total)
+                };
+
+                _context.Database.BeginTransaction();
+                try
+                {
+                    _context.Database.CommitTransaction();
+                    _context.Add(hoadon);
+                    _context.SaveChanges();
+                    var cthd = new List<SalesInvoiceDetail>();
+                    foreach (var item in Cart)
+                    {
+                        cthd.Add(new SalesInvoiceDetail()
+                        {
+                            InvoiceId = hoadon.Id,
+                            ProductId = item.CharmId,
+                            Quantity = item.Quantity,
+                            Price = item.Price,
+                            Note = "",
+                        });
+                    }
+                    _context.SaveChanges();
+                    HttpContext.Session.Set<List<CartItemVM>>(MySetting.CART_KEY, new List<CartItemVM>());
+                    return View("Success");
+                }
+                catch
+                {
+                    _context.Database.RollbackTransaction();
+                }
+            }
+            return View(Cart);
         }
     }
 }

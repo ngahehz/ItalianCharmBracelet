@@ -1,4 +1,5 @@
-﻿@model IEnumerable<ItalianCharmBracelet.ViewModels.InfoProductVM>
+﻿@using X.PagedList.Mvc.Core;
+@model X.PagedList.IPagedList<ItalianCharmBracelet.ViewModels.InfoProductVM>
 
 @{
     ViewData["Title"] = "Charm";
@@ -17,18 +18,22 @@
 }
 <!-- Single Page Header End -->
 <!-- Fruits Shop Start-->
-@await Html.PartialAsync("ProductItem", Model)
+@await Html.PartialAsync("ProductItem", Model.ToList())
 
 <div class="col-12">
     <div class="pagination d-flex justify-content-center mt-5">
-        <a href="#" class="rounded">&laquo;</a>
-        <a href="#" class="active rounded">1</a>
-        <a href="#" class="rounded">2</a>
-        <a href="#" class="rounded">3</a>
-        <a href="#" class="rounded">4</a>
-        <a href="#" class="rounded">5</a>
-        <a href="#" class="rounded">6</a>
-        <a href="#" class="rounded">&raquo;</a>
+
+        @* @Html.PagedListPager(Model, page => Url.Action("Index", new { page = page }), *@
+        @Html.PagedListPager(Model, page => Url.Action("Index", new { cate = ViewData["cate"], page = page }),
+                 new PagedListRenderOptions
+        {
+            MaximumPageNumbersToDisplay = 5,
+            // DisplayLinkToFirstPage = PagedListDisplayMode.Always,
+            // DisplayLinkToLastPage = PagedListDisplayMode.Always,
+            UlElementClasses = new string[] { "pagination" },
+            LiElementClasses = new string[] { "page-item" },
+            PageClasses = new string[] { "page-link" }
+        })
     </div>
 </div>
 <!-- Fruits Shop End-->

@@ -14,5 +14,7 @@ namespace ItalianCharmBracelet.ViewModels
         [Required(ErrorMessage = "Password is required")]
         [DataType(DataType.Password)]
         public string Password { get; set; }
+
     }
+
 }

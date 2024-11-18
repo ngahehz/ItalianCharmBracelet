@@ -29,6 +29,8 @@ public partial class ItalianCharmBraceletContext : DbContext
 
     public virtual DbSet<SalesInvoiceDetail> SalesInvoiceDetails { get; set; }
 
+    public virtual DbSet<State> States { get; set; }
+
     public virtual DbSet<Voucher> Vouchers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -186,17 +188,40 @@ public partial class ItalianCharmBraceletContext : DbContext
             entity.Property(e => e.Id)
                 .HasMaxLength(50)
                 .HasColumnName("ID");
+            entity.Property(e => e.Address)
+                .HasMaxLength(50)
+                .HasColumnName("ADDRESS");
+            entity.Property(e => e.Cell)
+                .HasMaxLength(50)
+                .HasColumnName("CELL");
+            entity.Property(e => e.CustomerId)
+                .HasMaxLength(50)
+                .HasColumnName("CUSTOMER_ID");
             entity.Property(e => e.Date).HasColumnName("DATE");
+            entity.Property(e => e.Name)
+                .HasMaxLength(50)
+                .HasColumnName("NAME");
             entity.Property(e => e.Note)
                 .HasColumnType("ntext")
                 .HasColumnName("NOTE");
-            entity.Property(e => e.State)
+            entity.Property(e => e.PaymentMethod)
                 .HasMaxLength(50)
-                .HasColumnName("STATE");
+                .HasColumnName("PAYMENT_METHOD");
+            entity.Property(e => e.StateId)
+                .HasMaxLength(50)
+                .HasColumnName("STATE_ID");
             entity.Property(e => e.TotalPayment).HasColumnName("TOTAL_PAYMENT");
             entity.Property(e => e.VoucherId)
                 .HasMaxLength(50)
                 .HasColumnName("VOUCHER_ID");
+
+            entity.HasOne(d => d.Customer).WithMany(p => p.SalesInvoices)
+                .HasForeignKey(d => d.CustomerId)
+                .HasConstraintName("FK_SALES_INVOICE_CUSTOMER");
+
+            entity.HasOne(d => d.State).WithMany(p => p.SalesInvoices)
+                .HasForeignKey(d => d.StateId)
+                .HasConstraintName("FK_SALES_INVOICE_STATE");
 
             entity.HasOne(d => d.Voucher).WithMany(p => p.SalesInvoices)
                 .HasForeignKey(d => d.VoucherId)
@@ -230,6 +255,18 @@ public partial class ItalianCharmBraceletContext : DbContext
                 .HasForeignKey(d => d.ProductId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_SALES_INVOICE_DETAIL_CHARM");
+        });
+
+        modelBuilder.Entity<State>(entity =>
+        {
+            entity.ToTable("STATE");
+
+            entity.Property(e => e.Id)
+                .HasMaxLength(50)
+                .HasColumnName("ID");
+            entity.Property(e => e.Name)
+                .HasMaxLength(50)
+                .HasColumnName("NAME");
         });
 
         modelBuilder.Entity<Voucher>(entity =>

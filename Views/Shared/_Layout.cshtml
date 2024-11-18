@@ -40,7 +40,6 @@
             <div class="spinner-grow text-primary" role="status"></div>
         </div>
         <!-- Spinner End -->
-
         <!-- Navbar start -->
         <div class="container-fluid fixed-top">
             <div class="container topbar bg-secondary d-none d-lg-block">
@@ -81,16 +80,19 @@
 
                             @await Component.InvokeAsync("Cart")
 
-                            <a asp-controller="Customer" asp-action="Login" title="Đăng nhập" class="my-auto">
+                            @*                     <a asp-controller="Customer" asp-action="Login" title="Đăng nhập" class="my-auto">
+                            <i class="fas fa-user fa-2x"></i>
+                            </a> *@
+                            <a href="javascript:void(0);" onclick="showLoginModal()" title="Đăng nhập" class="my-auto">
                                 <i class="fas fa-user fa-2x"></i>
                             </a>
                         </div>
+
                     </div>
                 </nav>
             </div>
         </div>
         <!-- Navbar End -->
-
         <!-- Modal Search Start -->
         <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-fullscreen">
@@ -109,8 +111,29 @@
             </div>
         </div>
         <!-- Modal Search End -->
+        <!-- Modal Login Start -->
+        <div class="modal fade" id="myModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog" style="max-width: 450px;">
+                <div class="modal-content">
+                    <div class="pt-2 d-flex justify-content-center">
+                        <h2 class="fw-bold mt-4 text-uppercase" id="myModalLabel">Login</h2>
+                    </div>
 
+                    <div class="p-4 pb-2 flex-grow-1 position-relative">
+                        <div id="loginContent" class="content-section">
+                            <!-- Khu vực Login -->
+                            @await Html.PartialAsync("~/Views/Customer/Login.cshtml", new LoginVM())
+                        </div>
+                        <div id="registerContent" class="content-section">
+                            <!-- Khu vực Register -->
+                            @await Html.PartialAsync("~/Views/Customer/Register.cshtml", new RegisterVM())
+                        </div>
+                    </div>
 
+                </div>
+            </div>
+        </div>
+        <!-- Modal Login End -->
         <div style="min-height:200px;">
             @RenderBody()
         </div>
