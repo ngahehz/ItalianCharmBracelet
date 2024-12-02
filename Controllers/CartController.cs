@@ -3,15 +3,23 @@ using ItalianCharmBracelet.Data;
 using ItalianCharmBracelet.ViewModels;
 using ItalianCharmBracelet.Helpers;
 using Microsoft.AspNetCore.Authorization;
+using System.Text.Json.Nodes;
+using Azure;
+using ItalianCharmBracelet.Services;
 
 namespace ItalianCharmBracelet.Controllers
 {
     public class CartController : Controller
     {
+        private readonly PaypalClient _paypalClient;
         private readonly ItalianCharmBraceletContext _context;
-        public CartController(ItalianCharmBraceletContext context)
+        private readonly IVnPayService _vnPayService;
+
+        public CartController(ItalianCharmBraceletContext context, PaypalClient paypalClient, IVnPayService vnPayService)
         {
+            _paypalClient = paypalClient;
             _context = context;
+            _vnPayService = vnPayService;
         }
 
         public List<CartItemVM> Cart => HttpContext.Session.Get<List<CartItemVM>>(MySetting.CART_KEY) ?? new List<CartItemVM>();
@@ -70,17 +78,19 @@ namespace ItalianCharmBracelet.Controllers
                     return Json(new
                     {
                         success = false,
-                        remove =true,
+                        remove = true,
                     });
                 }
             }
             HttpContext.Session.Set(MySetting.CART_KEY, gioHang);
             //return RedirectToAction("Index");
-            return Json(new { success = true,
+            return Json(new
+            {
+                success = true,
                 message = "Sản phẩm đã được thêm vào giỏ hàng",
                 total = gioHang.SingleOrDefault(p => p.CharmId == id).Total,
                 gioHang = new { quantity = gioHang.Sum(p => p.Quantity) }
-             });
+            });
         }
 
         public IActionResult RemoveFormCart(string id)
@@ -100,6 +110,7 @@ namespace ItalianCharmBracelet.Controllers
             });
         }
 
+        #region Checkout
         [Authorize]
         [HttpGet]
         public IActionResult Checkout()
@@ -108,6 +119,7 @@ namespace ItalianCharmBracelet.Controllers
             {
                 return RedirectToAction("Index");
             }
+            ViewBag.PaypalClientId = _paypalClient.ClientId;
             return View(Cart);
         }
 
@@ -128,20 +140,36 @@ namespace ItalianCharmBracelet.Controllers
                     Note = model.Note,
                     Date = DateOnly.FromDateTime(DateTime.Now),
                     StateId = "0",
-                    PaymentMethod = "COD",
+                    PaymentMethod = model.PaymentMethod,
                     TotalPayment = Cart.Sum(p => p.Total)
                 };
 
-                _context.Database.BeginTransaction();
+                var success = UpdateDatebase(hoadon);
+                if (success)
+                {
+                    HttpContext.Session.Set<List<CartItemVM>>(MySetting.CART_KEY, new List<CartItemVM>());
+                    //HttpContext.Session.Remove(MySetting.CART_KEY);
+                    //return RedirectToAction("PaymentSuccess");
+                    return Json(new { success = true, message = "" });
+                }
+            }
+            return PartialView("FormCheckout", model);
+            //return View(Cart);
+        }
+        #endregion
+
+        public bool UpdateDatebase(SalesInvoice hoadon)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
                 try
                 {
-                    _context.Database.CommitTransaction();
                     _context.Add(hoadon);
                     _context.SaveChanges();
-                    var cthd = new List<SalesInvoiceDetail>();
+                    var cthds = new List<SalesInvoiceDetail>();
                     foreach (var item in Cart)
                     {
-                        cthd.Add(new SalesInvoiceDetail()
+                        cthds.Add(new SalesInvoiceDetail()
                         {
                             InvoiceId = hoadon.Id,
                             ProductId = item.CharmId,
@@ -150,16 +178,129 @@ namespace ItalianCharmBracelet.Controllers
                             Note = "",
                         });
                     }
+                    _context.AddRange(cthds);
                     _context.SaveChanges();
-                    HttpContext.Session.Set<List<CartItemVM>>(MySetting.CART_KEY, new List<CartItemVM>());
-                    return View("Success");
+                    transaction.Commit(); //sua theo chatgpt
+                    return true;
                 }
                 catch
                 {
-                    _context.Database.RollbackTransaction();
+                    transaction.Rollback();
+                    return false;
                 }
             }
-            return View(Cart);
         }
+
+        #region Paypal
+        [Authorize]
+        [HttpPost("/Cart/create-paypal-order")]
+        public async Task<IActionResult> CreatePaypalOrder(CancellationToken cancellationToken)
+        {
+            var value = Cart.Sum(p => p.Total).ToString();
+            var currency = "USD";
+            var madonhangthamchieu = "DH" + DateTime.Now.Ticks.ToString();
+
+            var jsonResponse = await _paypalClient.CreateOrder(value, currency, madonhangthamchieu);
+            if (jsonResponse != null)
+            {
+                var orderId = jsonResponse["id"]?.ToString() ?? "";
+                return new JsonResult(new { Id = orderId });
+            }
+
+            return new JsonResult(new { Id = "" });
+        }
+
+        [Authorize]
+        [HttpPost("/Cart/capture-paypal-order")]
+        public async Task<IActionResult> CapturePaypalOrder([FromBody] Dictionary<string, string> formData)
+        {
+            if (formData != null)
+            {
+                string paymentMethod = formData["PaymentMethod"];
+                string orderId = formData["OrderId"];
+
+                var jsonResponse = await _paypalClient.CaptureOrder(orderId);
+
+                if (jsonResponse != null)
+                {
+                    string paypalOrderStatus = jsonResponse["status"]?.ToString() ?? "";
+                    if (paypalOrderStatus == "COMPLETED")
+                    {
+                        var customerId = HttpContext.User.Claims.SingleOrDefault(p => p.Type == MySetting.CLAIM_CUSTOMER).Value;
+                        var hoadon = new SalesInvoice()
+                        {
+                            Id = Util.GenerateID(_context, "HDB"),
+                            CustomerId = customerId,
+                            Name = formData["Name"],
+                            Address = formData["Address"],
+                            Cell = formData["Cell"],
+                            Note = formData["Note"],
+                            Date = DateOnly.FromDateTime(DateTime.Now),
+                            StateId = "0",
+                            PaymentMethod = paymentMethod,
+                            TotalPayment = Cart.Sum(p => p.Total)
+                        };
+
+                        var success = UpdateDatebase(hoadon);
+                        if (success)
+                        {
+                            HttpContext.Session.Set<List<CartItemVM>>(MySetting.CART_KEY, new List<CartItemVM>());
+                            //HttpContext.Session.Remove(MySetting.CART_KEY);
+                            return new JsonResult("success");
+                        }
+                        return new JsonResult("error but completed");
+                    }
+                }
+            }
+            return new JsonResult("error");
+        }
+
+
+        //public async Task<IActionResult> CreatePaypalOrder(CancellationToken cancellationToken)
+        //{
+        //    //Thông tin đơn hàng gửi qua paypal
+        //    var tongtien = Cart.Sum(p => p.Total).ToString();
+        //    var donvitiente = "USD";
+        //    var madonhangthamchieu = "DH" + DateTime.Now.Ticks.ToString();
+        //    try
+        //    {
+        //        var respone = await _paypalClient.CreateOrder(tongtien, donvitiente, madonhangthamchieu);
+        //        return Ok(respone);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        var error = new { ex.GetBaseException().Message };
+        //        return BadRequest(error);
+        //    }
+        //}
+
+        //public async Task<IActionResult> CapturePaypalOrder(string orderId, CancellationToken cancellationToken)
+        //{
+        //    try
+        //    {
+        //        var respone = await _paypalClient.CaptureOrder(orderId);
+        //        //Lưu database
+        //        return Ok(respone);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        var error = new { ex.GetBaseException().Message };
+        //        return BadRequest(error);
+        //    }
+        //}
+
+        #endregion
+
+        public IActionResult PaymentSuccess()
+        {
+            return View("Success");
+        }
+
+        [Authorize]
+        public IActionResult PaymentCallBack()
+        {
+            return View();
+        }
+
     }
 }

@@ -6,8 +6,6 @@ namespace ItalianCharmBracelet.ViewModels
     {
         [Display(Name = "Username")]
         [Required(ErrorMessage = "Username is required")]
-        [MaxLength(20, ErrorMessage = "Username can not be more than 20 characters")]
-        //cần phải check trong database nữa, xem sql nó có bao nhiêu ký tự
         public string Username { get; set; }
 
         [Display(Name = "Password")]

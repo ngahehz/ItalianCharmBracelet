@@ -1,24 +1,24 @@
-html {
-  font-size: 14px;
+﻿html {
+    font-size: 14px;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 html {
-  position: relative;
-  min-height: 100%;
+    position: relative;
+    min-height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+    margin-bottom: 60px;
 }
 
 
@@ -44,3 +44,32 @@ input[type=number] {
         position: absolute; /* giu vi tri de tranh tao khoang trong */
     }
 
+.no-caret::after {
+    display: none !important;
+}
+/*
+.nav-item.dropdown {
+    position: relative;
+}
+*/
+/* Dòng chữ bên dưới icon */
+.icon-text {
+    position: absolute;
+    top: 40px; /* Điều chỉnh để đặt text bên dưới icon */
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 16px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.dropdown-center {
+    display: flex;
+    justify-content: center; /* Căn giữa menu theo chiều ngang */
+    position: relative;
+}
+
+    .dropdown-center .dropdown-menu a:hover {
+        background: var(--bs-secondary);
+        color: var(--bs-primary);
+    }

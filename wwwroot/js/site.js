@@ -57,21 +57,26 @@ function toMoneyFormat(price) {
 }
 
 
-function showLoginModal() {
-    $('#registerContent').addClass('hidden'); // Ẩn Register
-    $('#loginContent').removeClass('hidden'); // Hiển thị Login
+function showLoginModal(returnUrl) {
+    $('#registerContent').addClass('hidden');
+    $('#loginContent').removeClass('hidden'); 
     $('#myModalLabel').text('Login');
     $('#myModal').modal('show');
+    const element = document.getElementById("requiredlogin_returnurl");
+    if (element) 
+        sessionStorage.setItem('returnUrl', sessionStorage.getItem('requiredlogin_returnurl'));
+     else 
+        sessionStorage.setItem('returnUrl', returnUrl);
 }
 
 function showRegisterModal() {
-    $('#loginContent').addClass('hidden'); // Ẩn Login
-    $('#registerContent').removeClass('hidden'); // Hiển thị Register
+    $('#loginContent').addClass('hidden'); 
+    $('#registerContent').removeClass('hidden');
     $('#myModalLabel').text('SignUp');
 }
 
+
 $(document).on("submit", "#loginForm", function (e) {
-    alert("1")
     e.preventDefault();
     $.ajax({
         url: "/Customer/Login",
@@ -79,9 +84,16 @@ $(document).on("submit", "#loginForm", function (e) {
         data: $(this).serialize(),
         success: function (response) {
             if (response.success) {
-                alert("2")
-                location.reload();
-                //window.location.href = response.returnUrl;
+                alert("đăng nhập thành công")
+                const returnUrl = sessionStorage.getItem('returnUrl');
+                if (returnUrl) {
+                    window.location.href = returnUrl;
+
+                    sessionStorage.removeItem('returnUrl');
+                    sessionStorage.removeItem('requiredlogin_returnurl');
+                } else {
+                    location.reload();
+                }
             } else {
                 $("#loginContent").html(response); // Update modal with errors if login failed
             }
@@ -91,8 +103,8 @@ $(document).on("submit", "#loginForm", function (e) {
         }
     });
 });
+
 $(document).on("submit", "#registerForm", function (e) {
-    alert("1")
     e.preventDefault();
     $.ajax({
         url: "/Customer/Register",
@@ -100,12 +112,9 @@ $(document).on("submit", "#registerForm", function (e) {
         data: $(this).serialize(),
         success: function (response) {
             if (response.success) {
-                alert("2")
-                alert(response.message);
+                alert("đăng ký thành công")
                 location.reload();
             } else {
-                alert("3")
-                alert(response.errors)
                 $("#registerContent").html(response); // Update modal with errors if login failed
             }
         },
@@ -114,3 +123,61 @@ $(document).on("submit", "#registerForm", function (e) {
         }
     });
 });
+
+async function initiatePayment() {
+    const isAuthenticated = document.getElementById('btnPay').getAttribute('data-is-authenticated') === 'True';
+    if (isAuthenticated) {
+        window.location.href = '/Cart/Checkout';
+    } else {
+        showLoginModal('/Cart/Checkout')
+    }
+}
+
+$(document).on("submit", "#formCheckout", function (e) {
+    e.preventDefault();
+    const paymentMethod = document.getElementById('COD-button').value;
+
+    const formData = $(this).serializeArray(); 
+    formData.push({ name: "PaymentMethod", value: paymentMethod });
+
+    $.ajax({
+        url: "/Cart/Checkout",
+        type: "POST",
+        data: formData,
+        success: function (response) {
+            if (response.success) {
+                window.location.href = '/Cart/PaymentSuccess';
+            } else {
+                $("#checkout_form").html(response);
+            }
+        },
+        error: function () {
+            alert("An error occurred. Please try again.");
+        }
+    });
+});
+
+//document.addEventListener('DOMContentLoaded', async () => {
+//    const currentPageUrl = window.location.pathname;  // Lấy URL hiện tại
+
+//    const response = await fetch(currentPageUrl, { method: 'GET' });
+
+//    if (response.status === 401) {
+//        showLoginModal('/Cart/Checkout');
+//    } else if (response.status === 200) {
+//        //window.location.href = '/Cart/Checkout';
+//    }
+//});
+
+//document.addEventListener('DOMContentLoaded', async () => {
+//    const response = await fetch('/Cart/Checkout', { method: 'GET' });
+
+//    if (response.status === 401) {
+//        // Người dùng chưa đăng nhập, hiển thị modal đăng nhập
+//        showLoginModal('/Cart/Checkout');
+//    } else if (response.status === 200) {
+//        // Người dùng đã đăng nhập, tiếp tục xử lý nội dung
+//        window.location.href = '/Cart/Checkout';
+//    }
+//});
+

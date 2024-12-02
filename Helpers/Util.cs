@@ -53,8 +53,9 @@ namespace ItalianCharmBracelet.Helpers
                     return $"{prefix}{(maxID + 1).ToString().PadLeft(5, '0')}";
                 case "HDB":
                     maxID = context.SalesInvoices.Any() ? context.SalesInvoices
-                            .Select(c => int.Parse(c.Id.Substring(2)))
-                            .Max() : 0;
+                                .AsEnumerable()
+                                .Select(c => int.Parse(c.Id.Substring(3)))
+                                .Max() : 0;
                     return $"{prefix}{(maxID + 1).ToString().PadLeft(6, '0')}";
                 case "HD":
                     maxID = context.Customers.Select(c => int.Parse(c.Id.Substring(2)))

@@ -80,12 +80,33 @@
 
                             @await Component.InvokeAsync("Cart")
 
-                            @*                     <a asp-controller="Customer" asp-action="Login" title="Đăng nhập" class="my-auto">
+                            @* <a asp-controller="Customer" asp-action="Login" title="Đăng nhập" class="my-auto">
                             <i class="fas fa-user fa-2x"></i>
                             </a> *@
-                            <a href="javascript:void(0);" onclick="showLoginModal()" title="Đăng nhập" class="my-auto">
-                                <i class="fas fa-user fa-2x"></i>
-                            </a>
+
+                            @{
+                                var userName = User.Identity.IsAuthenticated ? User.Identity.Name : "";
+                            }
+
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <div class="nav-item dropdown-center">
+                                    <a href="javascript:void(0);" onclick="showLoginModal(window.location.href)" class="nav-link dropdown-toggle no-caret" data-bs-toggle="dropdown">
+                                        <i class="fas fa-user fa-2x"></i>
+                                        <span class="icon-text">@userName</span>
+                                    </a>
+
+                                    <div class="dropdown-menu mt-3 p-0" style="min-width: 80px; font-size: 16px">
+                                        <a asp-controller="Customer" asp-action="Logout" class="dropdown-item rounded-1 text-center">Logout</a>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <a href="javascript:void(0);" onclick="showLoginModal(window.location.href)" class="nav-link dropdown-toggle no-caret">
+                                    <i class="fas fa-user fa-2x"></i>
+                                </a>
+                            }
                         </div>
 
                     </div>
@@ -165,5 +186,6 @@
             });
         });
     </script>
+
 </body>
 </html>

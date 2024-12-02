@@ -58,7 +58,7 @@ namespace ItalianCharmBracelet.Controllers
                 }
             }
             var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-            return Json(new { success = false, message = errors+"dd" });
+            //return Json(new { success = false, message = errors+"dd" });
             return PartialView("Register", model);
         }
         #endregion
@@ -90,7 +90,8 @@ namespace ItalianCharmBracelet.Controllers
                             {
                                 new Claim(ClaimTypes.Email, khachHang.Email),
                                 new Claim(ClaimTypes.Role, "Customer"),
-                                new Claim(MySetting.CLAIM_CUSTOMER, khachHang.Id)
+                                new Claim(MySetting.CLAIM_CUSTOMER, khachHang.Id),
+                                new Claim(ClaimTypes.Name, khachHang.Username)
                             };
                             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                             var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);

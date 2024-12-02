@@ -43,6 +43,27 @@ namespace ItalianCharmBracelet.Controllers
             return View();
         }
 
+        public IActionResult RequireLogin(string returnUrl)
+        {
+            var greetings = new List<string>
+            {
+                "Oops! 🚪🔒 You need to log in to open this door. Let’s get you signed in!",
+                "Hey there! 👋 To continue your journey, please log in 🗝️✨.",
+                "Uh-oh! 🛑 You need to be logged in to do this. Tap the login button and let’s go! 🚀",
+                "🔑 Login required! Don’t worry, it’ll only take a sec. 😉",
+                "Hi, friend! 🐻 This feature is for logged-in users only. Sign in to join the fun! 🎉",
+                "Looks like you’re not signed in yet! 😅 Click login and let’s fix that! ✅",
+                "Hold on! 🕒 You’ll need to log in to unlock this treasure 🏆✨.",
+                "👋 Hi there! Logging in gives you full access to this feature. Go ahead and tap login! 🌟"
+            };
+
+            var random = new Random();
+            var randomGreeting = greetings[random.Next(greetings.Count)];
+
+            ViewData["RandomGreetingLogin"] = randomGreeting;
+            return View("RequireLogin", returnUrl);
+        }
+
         public IActionResult Contact()
         {
             var greetings = new List<string>

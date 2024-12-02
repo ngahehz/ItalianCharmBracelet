@@ -3529,7 +3529,7 @@ textarea.form-control-lg {
     background-color: #fff;
     background-clip: padding-box;
     border: 1px solid rgba(0,0,0,.15);
-    border-radius: 10px
+    border-radius: 10px;
 }
 
     .dropdown-menu[data-bs-popper] {
@@ -3759,7 +3759,7 @@ textarea.form-control-lg {
     text-align: inherit;
     white-space: nowrap;
     background-color: rgba(0,0,0,0);
-    border: 0
+    border: 0;
 }
 
     .dropdown-item:hover, .dropdown-item:focus {
@@ -3931,7 +3931,7 @@ textarea.form-control-lg {
 .nav-link {
     display: block;
     padding: .5rem 1rem;
-    color: #81c408;
+    color: #dc3545;
     transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out
 }
 
