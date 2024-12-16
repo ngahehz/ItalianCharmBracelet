@@ -5,7 +5,7 @@
 
 <!-- Single Page Header start -->
 <div class="container-fluid page-header py-5">
-    <h1 class="text-center text-white display-6">Cart</h1>
+    <h1 class="text-center text-white display-6">Checkout</h1>
     <ol class="breadcrumb justify-content-center mb-0">
         <li class="breadcrumb-item text-center text-white">@ViewData["RandomGreetingCheckout"]</li>
     </ol>
@@ -49,9 +49,9 @@
                                                 </div>
                                             </th>
                                             <td class="py-5">@item.Name</td>
-                                            <td class="py-5">@item.Price</td>
+                                            <td class="py-5">@string.Format("{0:N0}", item.Price) VNĐ</td>
                                             <td class="py-5">@item.Quantity</td>
-                                            <td class="py-5">@item.Total</td>
+                                            <td class="py-5">@string.Format("{0:N0}", item.Total) VNĐ</td>
                                         </tr>
                                     }
 
@@ -65,7 +65,7 @@
                                         <td class="py-5"></td>
                                         <td class="py-5">
                                             <div class="py-3 border-bottom border-top">
-                                                <p class="mb-0 text-dark">@Model.Sum(p => p.Total)</p>
+                                                <p class="mb-0 text-dark">@string.Format("{0:N0}", Model.Sum(p => p.Total)) VNĐ</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -74,7 +74,10 @@
                         </div>
                     </div>
                     <div class="form-item mt-3">
-                        <button value="COD" id="COD-button" type="submit" class="btn border-secondary py-3 px-4 text-uppercase w-100 text-primary">Place Order</button>
+                        <button value="COD" type="submit" class="btn border-secondary py-3 px-4 text-uppercase w-100 text-primary">Place Order</button>
+                    </div>
+                    <div class="form-item mt-3">
+                        <button value="VnPay" type="submit" class="btn border-secondary py-3 px-4 text-uppercase w-100 text-primary">VNPAY</button>
                     </div>
                     <div data-method="Paypal" id="paypal-button-container" class="form-item mt-3"></div>
                 </div>

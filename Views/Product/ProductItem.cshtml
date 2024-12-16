@@ -3,25 +3,39 @@
 @foreach (var item in Model)
 {
     <div class="col-md-6 col-lg-6 col-xl-4">
-        <div class="rounded position-relative fruite-item">
+        <div class="rounded  position-relative fruite-item">
             <div class="fruite-img">
                 <a asp-action="Detail" asp-controller="Product" asp-route-id="@item.CharmId">
                     <img src="~/img/charm/@(item.CateId == "100" ? "available" : (item.CateId == "101" ? "order" : (item.CateId == "102" ? "design" : "")))/@item.Img" class="img-fluid w-100 rounded-top" alt="@item.Name">
                 </a>
             </div>
             <div class="text-white bg-secondary px-3 py-1 rounded position-absolute" style="top: 10px; left: 10px;">@item.CateName</div>
-            <div class="p-4 border border-secondary border-top-0 rounded-bottom">
-                <a asp-action="Detail" asp-controller="Product" asp-route-id="@item.CharmId">
-                    <h4>@item.Name</h4>
-                </a>
-                <div class="d-flex justify-content-between flex-lg-wrap">
-                    <p class="text-dark fs-5 fw-bold mb-0">@item.Price</p>
-                    @* <a asp-action="UpdateCart" asp-controller="Cart" asp-route-id="@item.MaHh" class="btn border border-secondary rounded-pill px-3 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a> *@
+            @* <div class="p-4 border  rounded-bottom">
+        <a asp-action="Detail" asp-controller="Product" asp-route-id="@item.CharmId">
+        <h4>@item.Name</h4>
+        </a>
+        <div class="d-flex justify-content-between flex-lg-wrap">
+        <p class="text-dark fs-5 fw-bold mb-0">@string.Format("{0:N0}", item.Price) VNĐ</p>
+        //<a asp-action="UpdateCart" asp-controller="Cart" asp-route-id="@item.MaHh" class="btn border border-secondary rounded-pill px-3 text-primary"><i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart</a>
+        <a href="javascript:void(0);" onclick="updateCart('@item.CharmId')" class="btn border border-secondary rounded-pill px-3 text-primary">
+        Add to cart
+        </a>
+        </div>
+        </div> *@
+            <div class="p-4 border rounded-bottom">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <a asp-action="Detail" asp-controller="Product" asp-route-id="@item.CharmId">
+                            <h4>@item.Name</h4>
+                        </a>
+                        <p class="text-dark fs-5 fw-bold mb-0">@string.Format("{0:N0}", item.Price) VNĐ</p>
+                    </div>
                     <a href="javascript:void(0);" onclick="updateCart('@item.CharmId')" class="btn border border-secondary rounded-pill px-3 text-primary">
-                        <i class="fa fa-shopping-bag me-2 text-primary"></i> Add to cart
+                        +
                     </a>
                 </div>
             </div>
+
         </div>
     </div>
 }

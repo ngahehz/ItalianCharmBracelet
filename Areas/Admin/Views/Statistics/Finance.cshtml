@@ -1,0 +1,76 @@
+﻿@model IEnumerable<ItalianCharmBracelet.Areas.Admin.ViewModels.FinanceVM>
+
+@* <form method="get" >
+    <label for="startDate">Từ ngày:</label>
+    <input type="date" id="startDate" name="startDate" required>
+    <label for="endDate">Đến ngày:</label>
+    <input type="date" id="endDate" name="endDate" required>
+    <button type="submit" class="btn btn-primary">Thống kê</button>
+</form>
+
+<div class="container">
+    <h2>Thống kê thu chi</h2>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Tổng thu</h5>
+                    <p class="card-text">@string.Format("{0:N0}", Model.Income) VNĐ</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-danger">
+                <div class="card-body">
+                    <h5 class="card-title">Tổng chi</h5>
+                    <p class="card-text">@string.Format("{0:N0}", Model.Expenses) VNĐ</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">Lợi nhuận</h5>
+                    <p class="card-text">@string.Format("{0:N0}", Model.Balance) VNĐ</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+ *@
+<form method="get" class="d-flex justify-content-center align-items-center m-2">
+    <div class="mr-3">
+        <label for="startDate">Từ ngày:</label>
+        <input type="month" id="startDate" name="startDate" value="@ViewBag.StartDate" required>
+    </div>
+    <div class="mr-3">
+        <label for="endDate">Đến ngày:</label>
+        <input type="month" id="endDate" name="endDate" value="@ViewBag.EndDate" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Thống kê</button>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Tháng</th>
+                <th>Tiền Chi</th>
+                <th>Tiền Thu</th>
+                <th>Tổng</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Month</td>
+                    <td>@string.Format("{0:N0}", item.Expenses) VNĐ</td>
+                    <td>@string.Format("{0:N0}", item.Income) VNĐ</td>
+                    <td>@string.Format("{0:N0}", item.Balance) VNĐ</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+

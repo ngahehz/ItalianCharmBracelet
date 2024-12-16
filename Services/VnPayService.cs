@@ -1,7 +1,5 @@
-﻿using Azure.Core;
-using ItalianCharmBracelet.Helpers;
+﻿using ItalianCharmBracelet.Helpers;
 using ItalianCharmBracelet.ViewModels;
-using System.Security.Policy;
 
 namespace ItalianCharmBracelet.Services
 {
@@ -30,7 +28,7 @@ namespace ItalianCharmBracelet.Services
             vnpay.AddRequestData("vnp_OrderInfo", "Thanh toan don hang:" + model.OrderId);
             vnpay.AddRequestData("vnp_OrderType", "other"); //default value: other
             vnpay.AddRequestData("vnp_ReturnUrl", _config["VnPay:PaymentBackReturnUrl"]);
-            vnpay.AddRequestData("vnp_TxnRef", $"{tick}");
+            vnpay.AddRequestData("vnp_TxnRef", tick);
 
             var paymentUrl = vnpay.CreateRequestUrl(_config["VnPay:BaseUrl"], _config["VnPay:HashSecret"]);
 
@@ -40,16 +38,16 @@ namespace ItalianCharmBracelet.Services
         public VnPaymentResponseModel PaymentExecute(IQueryCollection collections)
         {
             var vnpay = new VnPayLibrary();
-            foreach (var(key, value) in collections)
+            foreach (var (key, value) in collections)
             {
-                if(!string.IsNullOrEmpty(value) && key.StartsWith("vnp_"))
+                if (!string.IsNullOrEmpty(key) && key.StartsWith("vnp_"))
                 {
                     vnpay.AddResponseData(key, value.ToString());
                 }
             }
 
             var vnp_orderId = Convert.ToInt64(vnpay.GetResponseData("vnp_TxnRef"));
-            var vnpayTranId = Convert.ToInt64(vnpay.GetResponseData("vnp_TransactionNo"));
+            var vnp_TransactionId = Convert.ToInt64(vnpay.GetResponseData("vnp_TransactionNo"));
             var vnp_SecureHash = collections.FirstOrDefault(x => x.Key == "vnp_SecureHash").Value;
             var vnp_ResponseCode = vnpay.GetResponseData("vnp_ResponseCode");
             var vnp_OrderInfo = vnpay.GetResponseData("vnp_OrderInfo");
@@ -78,10 +76,12 @@ namespace ItalianCharmBracelet.Services
                     OrderDescription = vnp_OrderInfo,
                     OrderId = vnp_orderId.ToString(),
                     //PaymentId = vnpayTranId.ToString(),
-                    TransactionId = vnpayTranId.ToString(),
+                    TransactionId = vnp_TransactionId.ToString(),
                     Token = vnp_SecureHash,
                     VnPayResponseCode = vnp_ResponseCode
                 };
             }
+        }
     }
 }
+

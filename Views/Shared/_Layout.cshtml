@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using System.Security.Claims
+<!DOCTYPE html>
 
 <html>
 <head>
@@ -57,7 +58,8 @@
             </div>
             <div class="container px-0">
                 <nav class="navbar navbar-light bg-white navbar-expand-xl">
-                    <a asp-controller="Home" asp-action="Index" class="navbar-brand"><h1 class="text-primary display-6">Nice to have</h1></a>
+                    <a asp-area="Admin" asp-controller="Home" asp-action="Index" class="navbar-brand"><h1 class="text-primary display-6">Nice to have</h1></a>
+                    @* <a asp-controller="Home" asp-action="Index" class="navbar-brand"><h1 class="text-primary display-6">Nice to have</h1></a> *@
                     <button class="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
                         <span class="fa fa-bars text-primary"></span>
                     </button>
@@ -65,15 +67,14 @@
                         <div class="navbar-nav mx-auto">
                             <a asp-controller="Home" asp-action="Index" class="nav-item nav-link @(Html.IsActive("Home", "Index"))">Home</a>
                             <a asp-controller="Product" asp-action="Index" class="nav-item nav-link @(Html.IsActive("HangHoa", "Index"))">Shop</a>
-                            <div class="nav-item dropdown">
-                                <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Pages</a>
-                                <div class="dropdown-menu m-0 bg-secondary rounded-0">
-                                    <a href="chackout.html" class="dropdown-item">Chackout</a>
-                                    <a href="testimonial.html" class="dropdown-item">Testimonial</a>
-                                    <a asp-controller="Home" asp-action="NotFound404" class="dropdown-item">404 Page</a>
-                                </div>
-                            </div>
                             <a asp-controller="Home" asp-action="Contact" class="nav-item nav-link">Contact</a>
+                            @{
+                                var userRole = User.Identity.IsAuthenticated ? User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value : null;
+                            }
+                            @if (userRole == "1")
+                            {
+                                <a asp-area="Admin" asp-controller="Home" asp-action="Index" class="nav-item nav-link">Admin</a>
+                            }
                         </div>
                         <div class="d-flex m-3 me-0">
                             <button class="btn-search btn border border-secondary btn-md-square rounded-circle bg-white me-4" data-bs-toggle="modal" data-bs-target="#searchModal"><i class="fas fa-search text-primary"></i></button>
@@ -97,6 +98,7 @@
                                     </a>
 
                                     <div class="dropdown-menu mt-3 p-0" style="min-width: 80px; font-size: 16px">
+                                        <a asp-area="Admin" asp-controller="HomeAdmin" asp-action="index" class="dropdown-item rounded-1 text-center">Admin page</a>
                                         <a asp-controller="Customer" asp-action="Logout" class="dropdown-item rounded-1 text-center">Logout</a>
                                     </div>
                                 </div>
@@ -150,7 +152,6 @@
                             @await Html.PartialAsync("~/Views/Customer/Register.cshtml", new RegisterVM())
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>

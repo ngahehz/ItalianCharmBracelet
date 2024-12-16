@@ -89,7 +89,7 @@ namespace ItalianCharmBracelet.Controllers
                             var claims = new List<Claim>
                             {
                                 new Claim(ClaimTypes.Email, khachHang.Email),
-                                new Claim(ClaimTypes.Role, "Customer"),
+                                new Claim(ClaimTypes.Role, khachHang.Role),
                                 new Claim(MySetting.CLAIM_CUSTOMER, khachHang.Id),
                                 new Claim(ClaimTypes.Name, khachHang.Username)
                             };

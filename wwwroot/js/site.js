@@ -17,15 +17,22 @@ function updateCart(productId, productQuantity = 1) {
                 updateCartDisplay(response.gioHang);
                 var element = document.getElementById('total-' + productId);
                 if (element) {
-                    element.textContent = toMoneyFormat(response.total);
+                    element.textContent = toMoneyFormat(response.total) + " VNĐ";
+                }
+                if (response.product_quantity) { // thêm quá sản phẩm ở giỏ hang
+                    var inputElement = document.querySelector('#row-' + productId + ' input[type="number"]');
+                    inputElement.value = response.quantity
+                    alert(response.message)
                 }
             }
-            else if (response.remove) {
+            else if (!response.success && response.remove) { // xóa sản phẩm
                 removeFromCart(productId);
             }
-            else {
-                alert("looix"); // Thông báo lỗi nếu có
+            else if (!response.success && response.message) { // thêm quá sản phẩm ở trang sản phẩm
+                alert(response.message)
             }
+            else
+                alert("looix");
         },
         error: function () {
             alert("Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng.");
@@ -56,25 +63,23 @@ function toMoneyFormat(price) {
     return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-
 function showLoginModal(returnUrl) {
     $('#registerContent').addClass('hidden');
-    $('#loginContent').removeClass('hidden'); 
+    $('#loginContent').removeClass('hidden');
     $('#myModalLabel').text('Login');
     $('#myModal').modal('show');
     const element = document.getElementById("requiredlogin_returnurl");
-    if (element) 
+    if (element)
         sessionStorage.setItem('returnUrl', sessionStorage.getItem('requiredlogin_returnurl'));
-     else 
+    else
         sessionStorage.setItem('returnUrl', returnUrl);
 }
 
 function showRegisterModal() {
-    $('#loginContent').addClass('hidden'); 
+    $('#loginContent').addClass('hidden');
     $('#registerContent').removeClass('hidden');
     $('#myModalLabel').text('SignUp');
 }
-
 
 $(document).on("submit", "#loginForm", function (e) {
     e.preventDefault();
@@ -135,9 +140,9 @@ async function initiatePayment() {
 
 $(document).on("submit", "#formCheckout", function (e) {
     e.preventDefault();
-    const paymentMethod = document.getElementById('COD-button').value;
+    const paymentMethod = document.activeElement.value;
 
-    const formData = $(this).serializeArray(); 
+    const formData = $(this).serializeArray();
     formData.push({ name: "PaymentMethod", value: paymentMethod });
 
     $.ajax({
@@ -146,16 +151,67 @@ $(document).on("submit", "#formCheckout", function (e) {
         data: formData,
         success: function (response) {
             if (response.success) {
-                window.location.href = '/Cart/PaymentSuccess';
+                window.location.href = response.redirectUrl;
             } else {
                 $("#checkout_form").html(response);
             }
         },
-        error: function () {
-            alert("An error occurred. Please try again.");
+        error: function (jqXHR, textStatus, errorThrown) {
+            console.error("Error Status: " + textStatus);
+            console.error("Error Thrown: " + errorThrown);
+            console.error("Response Text: " + jqXHR.responseText);
+            alert("An error occurred: " + textStatus);
         }
     });
 });
+
+
+//$(document).on("submit", "#formCheckout", async function (e) {
+//    e.preventDefault();
+
+//    const paymentMethod = document.activeElement.value;
+
+//    const formData = $(this).serializeArray();
+//    formData.push({ name: "PaymentMethod", value: paymentMethod });
+
+//    try {
+//        const checkoutResponse = await handleAjax("/Cart/Checkout", formData);
+
+//        if (checkoutResponse.success) {
+//            if (checkoutResponse.redirectUrl) {
+//                const callbackResponse = await handleAjax(checkoutResponse.redirectUrl);
+//                if (callbackResponse.success) {
+//                    window.location.href = "/Cart/PaymentSuccess";
+//                }
+//                else {
+//                    $("#checkout_form").html(callbackResponse);
+//                }
+//            }
+//            else {
+//                window.location.href = "/Cart/PaymentSuccess";
+//            }
+//        } else {
+//            $("#checkout_form").html(checkoutResponse);
+//        }
+//    } catch (error) {
+//        handleError(error);
+//    }
+//});
+
+//function handleAjax(url, data) {
+//    return $.ajax({
+//        url: url,
+//        type: "POST",
+//        data: data
+//    });
+//}
+
+//function handleError(jqXHR, textStatus, errorThrown) {
+//    console.error("Error Status: " + textStatus);
+//    console.error("Error Thrown: " + errorThrown);
+//    console.error("Response Text: " + jqXHR.responseText);
+//    alert("An error occurred: " + textStatus);
+//}
 
 //document.addEventListener('DOMContentLoaded', async () => {
 //    const currentPageUrl = window.location.pathname;  // Lấy URL hiện tại

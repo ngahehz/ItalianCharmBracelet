@@ -1,0 +1,37 @@
+﻿@model IEnumerable<ItalianCharmBracelet.Areas.Admin.ViewModels.InvoicesVM>
+
+
+<form method="get" class="d-flex justify-content-center align-items-center m-2">
+    <div class="mr-3">
+        <label for="startDate">Từ ngày:</label>
+        <input type="month" id="startDate" name="startDate" value="@ViewBag.StartDate" required>
+    </div>
+    <div class="mr-3">
+        <label for="endDate">Đến ngày:</label>
+        <input type="month" id="endDate" name="endDate" value="@ViewBag.EndDate" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Thống kê</button>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Month</th>
+                <th>Quantity</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Month</td>
+                    <td>@item.Quantity</td>
+                    <td>@string.Format("{0:N0}", item.Total) VNĐ</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+

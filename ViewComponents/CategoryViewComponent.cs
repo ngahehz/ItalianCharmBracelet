@@ -19,7 +19,7 @@ namespace ItalianCharmBracelet.ViewComponents
             {
                 Id = lo.Id,
                 Name = lo.Name,
-                Quantity = lo.Charms.Count
+                Quantity = lo.Charms.Where(c => c.Quantity != 0 && c.Quantity != null).Count()
             }).OrderBy(p => p.Id);
 
             return View(categories);

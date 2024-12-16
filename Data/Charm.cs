@@ -25,6 +25,8 @@ public partial class Charm
 
     public string? Description { get; set; }
 
+    public string State { get; set; } = null!;
+
     public virtual Category? Cate { get; set; }
 
     public virtual ICollection<PurchaseInvoiceDetail> PurchaseInvoiceDetails { get; set; } = new List<PurchaseInvoiceDetail>();

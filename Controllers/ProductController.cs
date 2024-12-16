@@ -13,12 +13,18 @@ namespace ItalianCharmBracelet.Controllers
         {
             _context = context;
         }
+        private IQueryable<Charm> GetCharms()
+        {
+            //var charms = _context.Charms.AsQueryable();
+            var charms = _context.Charms.Where(p => p.CateId != "100" || (p.Quantity != 0 && p.Quantity != null)); // người ta kêu không cần AsQueryable () vì nó mặc định là IQueryable rồi
+            return charms;
+        }
         public IActionResult Index(string? cate, int? page)
         {
             int pageSize = 18;
             int pageNumber = page == null || page < 0 ? 1 : page.Value;
 
-            var charms = _context.Charms.AsQueryable();
+            var charms = GetCharms();
             if (!string.IsNullOrEmpty(cate))
             {
                 charms = charms.Where(p => p.CateId == cate);
@@ -31,7 +37,7 @@ namespace ItalianCharmBracelet.Controllers
 
         public IActionResult Search(string? query)
         {
-            var hangHoas = _context.Charms.AsQueryable();
+            var hangHoas = GetCharms();
             if (query != null)
             {
                 hangHoas = hangHoas.Where(p => p.Name.Contains(query));
@@ -60,7 +66,7 @@ namespace ItalianCharmBracelet.Controllers
             // Truyền câu ngẫu nhiên vào View thông qua ViewData
             ViewData["RandomGreeting"] = randomGreeting;
 
-            var charm = _context.Charms
+            var charm = GetCharms()
                 .Include(p => p.Cate)
                 .SingleOrDefault(p => p.Id == id);
             if (charm == null)

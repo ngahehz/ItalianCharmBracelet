@@ -3,9 +3,8 @@ using ItalianCharmBracelet.Data;
 using ItalianCharmBracelet.ViewModels;
 using ItalianCharmBracelet.Helpers;
 using Microsoft.AspNetCore.Authorization;
-using System.Text.Json.Nodes;
-using Azure;
 using ItalianCharmBracelet.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace ItalianCharmBracelet.Controllers
 {
@@ -52,13 +51,26 @@ namespace ItalianCharmBracelet.Controllers
         {
             var gioHang = Cart;
             var item = gioHang.SingleOrDefault(p => p.CharmId == id);
+            var hangHoa = _context.Charms.SingleOrDefault(p => p.Id == id);
+
+            if (hangHoa == null)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Không tìm thấy hàng hóa",
+                });
+            }
+
             if (item == null)
             {
-                var hangHoa = _context.Charms.SingleOrDefault(p => p.Id == id);
-                if (hangHoa == null)
+                if(hangHoa.CateId == "100" && (hangHoa.Quantity < quantity || hangHoa.Quantity == null))
                 {
-                    TempData["Message"] = "Không tìm thấy hàng hóa";
-                    return NotFound();
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Bạn đã thêm sản phẩm " + hangHoa.Name + " vượt quá số lượng trong kho. Số lượng còn lại của mặt hàng là " + (hangHoa.Quantity != null ? hangHoa.Quantity : 0),
+                    });
                 }
                 gioHang.Add(new CartItemVM()
                 {
@@ -78,7 +90,21 @@ namespace ItalianCharmBracelet.Controllers
                     return Json(new
                     {
                         success = false,
+                        message = "Sản phẩm đã được xóa",
                         remove = true,
+                    });
+                }
+                if(item.Quantity > hangHoa.Quantity)
+                {
+                    item.Quantity = (int)hangHoa.Quantity;
+                    return Json(new
+                    {
+                        success = true,
+                        message = "Số lượng tối đa của sản phẩm là " + hangHoa.Quantity,
+                        product_quantity = true,
+                        quantity = hangHoa.Quantity != null ? hangHoa.Quantity : 0,
+                        total = gioHang.SingleOrDefault(p => p.CharmId == id).Total,
+                        gioHang = new { quantity = gioHang.Sum(p => p.Quantity) }
                     });
                 }
             }
@@ -107,7 +133,7 @@ namespace ItalianCharmBracelet.Controllers
                 success = true,
                 message = "Sản phẩm đã được xóa khỏi giỏ hàng",
                 gioHang = new { quantity = gioHang.Sum(p => p.Quantity) }
-            });
+            });/* ê cần sửa chỗ này nha trời*/
         }
 
         #region Checkout
@@ -115,7 +141,26 @@ namespace ItalianCharmBracelet.Controllers
         [HttpGet]
         public IActionResult Checkout()
         {
-            if (Cart.Count == 0)
+			var greetings = new List<string>
+			{
+				"You're one step away from happiness! 🛍️✨",
+				"Securely completing your payment... 💳🔒",
+				"Let’s wrap this up! 🎁 Your order is almost on its way!",
+				"Shopping made easy! 🛒💖 Just fill in your details and you're done!",
+				"You're about to make your day brighter! ☀️💳",
+				"Your payment is 100% secure with us! 🛡️✨",
+				"We value your trust! 🔒💙 Pay securely and confidently!",
+				"Final stretch! 🏁✨ Your goodies are almost yours!",
+				"We can't wait to pack your order! 📦✨"
+			};
+
+			var random = new Random();
+			var randomGreeting = greetings[random.Next(greetings.Count)];
+
+			// Truyền câu ngẫu nhiên vào View thông qua ViewData
+			ViewData["RandomGreetingCheckout"] = randomGreeting;
+
+			if (Cart.Count == 0)
             {
                 return RedirectToAction("Index");
             }
@@ -144,13 +189,28 @@ namespace ItalianCharmBracelet.Controllers
                     TotalPayment = Cart.Sum(p => p.Total)
                 };
 
+                if (model.PaymentMethod == "VnPay")
+                {
+                    HttpContext.Session.Set("HOADONVNPAY", hoadon);
+                    var vnpayModel = new VnpaymentRequestModel
+                    {
+                        Amount = Cart.Sum(p => p.Price),
+                        CreatedDate = DateTime.Now,
+                        Description = $"{model.Cell}",
+                        FullName = model.Name,
+                        OrderId = hoadon.Id,
+                    };
+                    var paymentUrl = _vnPayService.CreatePaymentUrl(HttpContext, vnpayModel);
+                    return Json(new { success = true, redirectUrl = paymentUrl });
+                }
+
                 var success = UpdateDatebase(hoadon);
                 if (success)
                 {
                     HttpContext.Session.Set<List<CartItemVM>>(MySetting.CART_KEY, new List<CartItemVM>());
                     //HttpContext.Session.Remove(MySetting.CART_KEY);
                     //return RedirectToAction("PaymentSuccess");
-                    return Json(new { success = true, message = "" });
+                    return Json(new { success = true, redirectUrl = "/Cart/PaymentSuccess" });
                 }
             }
             return PartialView("FormCheckout", model);
@@ -165,7 +225,7 @@ namespace ItalianCharmBracelet.Controllers
                 try
                 {
                     _context.Add(hoadon);
-                    _context.SaveChanges();
+                    //_context.SaveChanges();
                     var cthds = new List<SalesInvoiceDetail>();
                     foreach (var item in Cart)
                     {
@@ -177,7 +237,12 @@ namespace ItalianCharmBracelet.Controllers
                             Price = item.Price,
                             Note = "",
                         });
+
+                        var charm = _context.Charms.Find(item.CharmId);
+                        charm.Quantity -= item.Quantity;
+                        _context.Entry(charm).State = EntityState.Modified;
                     }
+
                     _context.AddRange(cthds);
                     _context.SaveChanges();
                     transaction.Commit(); //sua theo chatgpt
@@ -256,39 +321,61 @@ namespace ItalianCharmBracelet.Controllers
         }
 
 
-        //public async Task<IActionResult> CreatePaypalOrder(CancellationToken cancellationToken)
-        //{
-        //    //Thông tin đơn hàng gửi qua paypal
-        //    var tongtien = Cart.Sum(p => p.Total).ToString();
-        //    var donvitiente = "USD";
-        //    var madonhangthamchieu = "DH" + DateTime.Now.Ticks.ToString();
-        //    try
-        //    {
-        //        var respone = await _paypalClient.CreateOrder(tongtien, donvitiente, madonhangthamchieu);
-        //        return Ok(respone);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        var error = new { ex.GetBaseException().Message };
-        //        return BadRequest(error);
-        //    }
-        //}
+		//public async Task<IActionResult> CreatePaypalOrder(CancellationToken cancellationToken)
+		//{
+		//    //Thông tin đơn hàng gửi qua paypal
+		//    var tongtien = Cart.Sum(p => p.Total).ToString();
+		//    var donvitiente = "USD";
+		//    var madonhangthamchieu = "DH" + DateTime.Now.Ticks.ToString();
+		//    try
+		//    {
+		//        var response = await _paypalClient.CreateOrder(tongtien, donvitiente, madonhangthamchieu);
+		//        return Ok(response);
+		//    }
+		//    catch (Exception ex)
+		//    {
+		//        var error = new { ex.GetBaseException().Message };
+		//        return BadRequest(error);
+		//    }
+		//}
 
-        //public async Task<IActionResult> CapturePaypalOrder(string orderId, CancellationToken cancellationToken)
-        //{
-        //    try
-        //    {
-        //        var respone = await _paypalClient.CaptureOrder(orderId);
-        //        //Lưu database
-        //        return Ok(respone);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        var error = new { ex.GetBaseException().Message };
-        //        return BadRequest(error);
-        //    }
-        //}
+		//public async Task<IActionResult> CapturePaypalOrder(string orderId, CancellationToken cancellationToken)
+		//{
+		//    try
+		//    {
+		//        var response = await _paypalClient.CaptureOrder(orderId);
+		//        //Lưu database
+		//        return Ok(response);
+		//    }
+		//    catch (Exception ex)
+		//    {
+		//        var error = new { ex.GetBaseException().Message };
+		//        return BadRequest(error);
+		//    }
+		//}
 
+		#endregion
+
+		#region VnPay
+		[Authorize]
+        public IActionResult PaymentCallBack()
+        {
+            var response = _vnPayService.PaymentExecute(Request.Query);
+            if (response == null || response.VnPayResponseCode != "00")
+            {
+				string text = $"Lỗi thanh toán VN Pay: {response?.VnPayResponseCode ?? "Không xác định"}";
+				return RedirectToAction("PaymentFailure", new { text = text });
+			}
+
+            var hoadon = HttpContext.Session.Get<SalesInvoice>("HOADONVNPAY");
+            var success = UpdateDatebase(hoadon);
+            if (!success)
+            {
+				return RedirectToAction("PaymentFailure", "Liên hệ admin để được xử lý");
+            }
+            HttpContext.Session.Set<List<CartItemVM>>(MySetting.CART_KEY, new List<CartItemVM>());
+            return RedirectToAction("PaymentSuccess");
+        }
         #endregion
 
         public IActionResult PaymentSuccess()
@@ -296,11 +383,10 @@ namespace ItalianCharmBracelet.Controllers
             return View("Success");
         }
 
-        [Authorize]
-        public IActionResult PaymentCallBack()
+        public IActionResult PaymentFailure(string text)
         {
-            return View();
+			ViewBag.ErrorMessage = text ?? "Đã xảy ra lỗi trong quá trình thanh toán.";
+			return View("Failure");
         }
-
     }
 }

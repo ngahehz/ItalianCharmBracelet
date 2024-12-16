@@ -72,6 +72,10 @@ public partial class ItalianCharmBraceletContext : DbContext
                 .HasColumnName("NAME");
             entity.Property(e => e.Price).HasColumnName("PRICE");
             entity.Property(e => e.Quantity).HasColumnName("QUANTITY");
+            entity.Property(e => e.State)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("STATE");
             entity.Property(e => e.Tag)
                 .HasMaxLength(50)
                 .HasColumnName("TAG");
@@ -291,6 +295,10 @@ public partial class ItalianCharmBraceletContext : DbContext
                 .HasColumnName("NOTE");
             entity.Property(e => e.PercentDiscount).HasColumnName("PERCENT_DISCOUNT");
             entity.Property(e => e.StartDate).HasColumnName("START_DATE");
+            entity.Property(e => e.State)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("STATE");
         });
 
         OnModelCreatingPartial(modelBuilder);
