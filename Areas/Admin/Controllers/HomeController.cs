@@ -1,14 +1,17 @@
 ﻿using AutoMapper;
 using ItalianCharmBracelet.Areas.Admin.ViewModels;
 using ItalianCharmBracelet.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
 namespace ItalianCharmBracelet.Areas.Admin.Controllers
 {
+
     [Area("Admin")]
     [Route("Admin")]
     [Route("Admin/Home")]
+    //[Authorize(Roles = "1")]
     public class HomeController : Controller
     {
         private readonly ItalianCharmBraceletContext _context;

@@ -6,89 +6,119 @@
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<h1>Voucher</h1>
+<div class="d-flex justify-content-between align-items-center">
+    <h1>Voucher</h1>
+    <a asp-action="DeletedVoucher">
+        <i class="fas fa-trash fa-3x"></i>
+    </a>
+</div>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="AddVoucher">Create New</a>
 </p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                Id
-            </th>
-            <th>
-                Code
-            </th>
-            <th>
-                Discription
-            </th>
-            <th>
-                DiscountAmount
-            </th>
-            <th>
-                MinInvoiceValue
-            </th>
-            <th>
-                PercentDiscount
-            </th>
-            <th>
-                MaxDiscount
-            </th>
-            <th>
-                StartDate
-            </th>
-            <th>
-                EndDate
-            </th>
-            <th>
-                Note
-            </th>
-            <th>
-                State
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Code)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Discription)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.DiscountAmount)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.MinInvoiceValue)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PercentDiscount)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.MaxDiscount)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.StartDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.EndDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Note)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.State)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+
+<div class="table-responsive">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>
+                    ID
+                </th>
+                <th>
+                    Code
+                </th>
+                <th>
+                    Discription
+                </th>
+                <th>
+                    DiscountAmount
+                </th>
+                <th>
+                    MinInvoiceValue
+                </th>
+                <th>
+                    PercentDiscount
+                </th>
+                <th>
+                    MaxDiscount
+                </th>
+                <th>
+                    StartDate
+                </th>
+                <th>
+                    EndDate
+                </th>
+                <th>
+                    Note
+                </th>
+                <th>
+                    State
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Id)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Code)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Discription)
+                    </td>
+                    @{
+                        var DiscountAmount = item.DiscountAmount == null ? null : string.Format("{0:N0}", item.DiscountAmount) + " VNĐ";
+                        var MinInvoiceValue = item.MinInvoiceValue == null ? null : string.Format("{0:N0}", item.MinInvoiceValue) + " VNĐ";
+                        var MaxDiscount = item.MaxDiscount == null ? null : string.Format("{0:N0}", item.MaxDiscount) + " VNĐ";
+                    }
+                    <td>
+                        @DiscountAmount
+                    </td>
+                    <td>
+                        @MinInvoiceValue
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.PercentDiscount)
+                    </td>
+                    <td>
+                        @MaxDiscount
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.StartDate)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.EndDate)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Note)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.State)
+                    </td>
+                    <td>
+                        <a asp-action="updateproduct" asp-route-VoucherId="@item.Id">Edit</a> |
+                        <a asp-action="updateproduct" asp-route-id="@item.Id" asp-route-option="2">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div>
+    <div class="pagination d-flex justify-content-center mt-5">
+
+        @Html.PagedListPager(Model, page => Url.Action("Voucher", new { area = "Admin", page = page }),
+                 new PagedListRenderOptions
+        {
+            MaximumPageNumbersToDisplay = 5,
+            UlElementClasses = new string[] { "pagination" },
+            LiElementClasses = new string[] { "page-item" },
+            PageClasses = new string[] { "page-link" }
+        })
+    </div>
+</div>

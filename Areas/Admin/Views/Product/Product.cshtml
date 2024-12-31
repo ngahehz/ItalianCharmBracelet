@@ -5,8 +5,9 @@
     ViewData["Title"] = "Product";
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
 }
+
 <div class="d-flex justify-content-between align-items-center">
-    <h1>ProductManagement</h1>
+    <h1>Product Management</h1>
     <a asp-action="DeletedProduct">
         <i class="fas fa-trash fa-3x"></i>
     </a>
@@ -103,9 +104,10 @@
         </tbody>
     </table>
 </div>
+
 <div>
     <div class="pagination d-flex justify-content-center mt-5">
-        @Html.PagedListPager(Model, page => Url.Action("Index", new { cate = ViewData["cate"], page = page }),
+        @Html.PagedListPager(Model, page => Url.Action("Product", new { area = "Admin", cate = ViewData["cate"], page = page }),
                  new PagedListRenderOptions
         {
             MaximumPageNumbersToDisplay = 5,

@@ -34,7 +34,7 @@ namespace ItalianCharmBracelet.Areas.Admin.Controllers
             return View(list);
         }
 
-        [Route("deleted")]
+        [Route("Bin")]
         public IActionResult DeletedProduct(string? cate, int? page)
         {
             int pageSize = 20;
@@ -51,7 +51,7 @@ namespace ItalianCharmBracelet.Areas.Admin.Controllers
             return View(list);
         }
 
-        [Route("addproduct")]
+        [Route("Add")]
         [HttpGet]
         public IActionResult AddProduct()
         {
@@ -59,7 +59,7 @@ namespace ItalianCharmBracelet.Areas.Admin.Controllers
             return View();
         }
 
-        [Route("addproduct")]
+        [Route("Add")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult AddProduct(Charm model)
@@ -70,13 +70,13 @@ namespace ItalianCharmBracelet.Areas.Admin.Controllers
                 //charm = Mapper.Map<CharmViewModel, Charm>(model);
                 _context.Charms.Add(model);
                 _context.SaveChanges();
-                return RedirectToAction("Index");
+                return RedirectToAction("Product");
             }
             ViewBag.CateId = new SelectList(_context.Categories, "Id", "Name");
             return View(model);
         }
 
-        [Route("updateproduct")]
+        [Route("Update")]
         [HttpGet]
         public IActionResult UpdateProduct(string CharmId, string option = "1")
         {
@@ -86,13 +86,13 @@ namespace ItalianCharmBracelet.Areas.Admin.Controllers
                 charm.State = "0";
                 _context.Entry(charm).State = EntityState.Modified;
                 _context.SaveChanges();
-                return RedirectToAction("Index");
+                return RedirectToAction("Product");
             }
             ViewBag.CateId = new SelectList(_context.Categories, "Id", "Name");
             return View(charm);
         }
 
-        [Route("updateproduct")]
+        [Route("Update")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult UpdateProduct(Charm model)
@@ -101,13 +101,13 @@ namespace ItalianCharmBracelet.Areas.Admin.Controllers
             {
                 _context.Entry(model).State = EntityState.Modified;
                 _context.SaveChanges();
-                return RedirectToAction("Index");
+                return RedirectToAction("Product");
             }
             ViewBag.CateId = new SelectList(_context.Categories, "Id", "Name");
             return View(model);
         }
 
-        [Route("deleteproduct")]
+        [Route("Delete")]
         public IActionResult DeleteProduct(string CharmId)
         {
             TempData["Message"] = "";
@@ -115,12 +115,12 @@ namespace ItalianCharmBracelet.Areas.Admin.Controllers
             if (charm == null)
             {
                 TempData["Message"] = "Không tìm thấy sản phẩm";
-                return RedirectToAction("Index");
+                return RedirectToAction("Product");
             }
             _context.Charms.Remove(charm);
             _context.SaveChanges();
             TempData["Message"] = "Xóa sản phẩm thành công";
-            return RedirectToAction("Index");
+            return RedirectToAction("Product");
         }
     }
 }

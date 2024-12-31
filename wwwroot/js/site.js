@@ -19,9 +19,12 @@ function updateCart(productId, productQuantity = 1) {
                 if (element) {
                     element.textContent = toMoneyFormat(response.total) + " VNĐ";
                 }
-                if (response.product_quantity) { // thêm quá sản phẩm ở giỏ hang
+                if (response.product_quantity) { // thêm quá sản phẩm ở giỏ hang + trang product
                     var inputElement = document.querySelector('#row-' + productId + ' input[type="number"]');
-                    inputElement.value = response.quantity
+                    if (inputElement)
+                        inputElement.value = response.quantity
+                    else
+                        document.querySelector('input[name=quantity]').value = response.quantity
                     alert(response.message)
                 }
             }

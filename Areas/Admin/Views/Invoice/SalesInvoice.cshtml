@@ -75,7 +75,7 @@
                         @Html.DisplayFor(modelItem => item.Date)
                     </td>
                     <td>
-                        @Html.DisplayFor(modelItem => item.TotalPayment)
+                        @string.Format("{0:N0}", item.TotalPayment) VNĐ
                     </td>
                     <td>
                         @Html.DisplayFor(modelItem => item.VoucherId)
