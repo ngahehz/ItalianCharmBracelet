@@ -1,4 +1,5 @@
 ﻿using ItalianCharmBracelet.Data;
+using ItalianCharmBracelet.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +25,7 @@ namespace ItalianCharmBracelet.Areas.Admin.Controllers
             int pageNumber = page == null || page < 0 ? 1 : page.Value;
 
             var vouchers = _context.Vouchers.AsQueryable();
-            vouchers = vouchers.Where(p => p.State == "1");
+            vouchers = vouchers.Where(p => p.State > 0);
             PagedList<Voucher> list = new PagedList<Voucher>(vouchers, pageNumber, pageSize);
             return View(list);
         }
@@ -34,6 +35,7 @@ namespace ItalianCharmBracelet.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult AddVoucher()
         {
+            ViewBag.VcId = Util.GenerateID(_context, "VC");
             return View();
         }
 
@@ -48,6 +50,7 @@ namespace ItalianCharmBracelet.Areas.Admin.Controllers
                 _context.SaveChanges();
                 return RedirectToAction("Voucher");
             }
+            ViewBag.VcId = Util.GenerateID(_context, "VC");
             return View(model);
         }
         #endregion
@@ -59,7 +62,7 @@ namespace ItalianCharmBracelet.Areas.Admin.Controllers
             int pageNumber = page == null || page < 0 ? 1 : page.Value;
 
             var vouchers = _context.Vouchers.AsQueryable();
-            vouchers = vouchers.Where(p => p.State == "0");
+            vouchers = vouchers.Where(p => p.State == -1);
             PagedList<Voucher> list = new PagedList<Voucher>(vouchers, pageNumber, pageSize);
             return View(list);
         }

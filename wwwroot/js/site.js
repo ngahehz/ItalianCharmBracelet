@@ -22,9 +22,14 @@ function updateCart(productId, productQuantity = 1) {
                 if (response.product_quantity) { // thêm quá sản phẩm ở giỏ hang + trang product
                     var inputElement = document.querySelector('#row-' + productId + ' input[type="number"]');
                     if (inputElement)
-                        inputElement.value = response.quantity
-                    else
-                        document.querySelector('input[name=quantity]').value = response.quantity
+                        inputElement.value = response.quantity;
+                    else {
+                        inputElement = document.querySelector('input[name=quantity]');
+                        if (inputElement) {
+                            inputElement.value = response.quantity;
+                        }
+                    }
+                        //document.querySelector('input[name=quantity]').value = response.quantity
                     alert(response.message)
                 }
             }
@@ -132,41 +137,6 @@ $(document).on("submit", "#registerForm", function (e) {
     });
 });
 
-async function initiatePayment() {
-    const isAuthenticated = document.getElementById('btnPay').getAttribute('data-is-authenticated') === 'True';
-    if (isAuthenticated) {
-        window.location.href = '/Cart/Checkout';
-    } else {
-        showLoginModal('/Cart/Checkout')
-    }
-}
-
-$(document).on("submit", "#formCheckout", function (e) {
-    e.preventDefault();
-    const paymentMethod = document.activeElement.value;
-
-    const formData = $(this).serializeArray();
-    formData.push({ name: "PaymentMethod", value: paymentMethod });
-
-    $.ajax({
-        url: "/Cart/Checkout",
-        type: "POST",
-        data: formData,
-        success: function (response) {
-            if (response.success) {
-                window.location.href = response.redirectUrl;
-            } else {
-                $("#checkout_form").html(response);
-            }
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            console.error("Error Status: " + textStatus);
-            console.error("Error Thrown: " + errorThrown);
-            console.error("Response Text: " + jqXHR.responseText);
-            alert("An error occurred: " + textStatus);
-        }
-    });
-});
 
 
 //$(document).on("submit", "#formCheckout", async function (e) {

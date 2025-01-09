@@ -73,6 +73,7 @@
                             </table>
                         </div>
                     </div>
+                    @* <input type="text" name="Voucher" value="@ViewBag.InputData" readonly /> *@
                     <div class="form-item mt-3">
                         <button value="COD" type="submit" class="btn border-secondary py-3 px-4 text-uppercase w-100 text-primary">Place Order</button>
                     </div>
@@ -88,76 +89,9 @@
 <!-- Checkout Page End -->
 @section Scripts {
     <script src="https://www.paypal.com/sdk/js?client-id=@ViewBag.PaypalClientId"></script>
-    <script>
-        const form = document.getElementById('formCheckout');
 
-        paypal.Buttons({
-            style: {
-                layout: 'vertical',
-                color: 'gold',
-                tagline: 'false'
-            },
-
-            onInit(data, actions) {
-                actions.disable();
-                form.addEventListener('input', function (event) {
-                    if (!form.checkValidity()) {
-                        actions.disable();
-                    }
-                    else actions.enable();
-                });
-            },
-
-            onClick() {
-                if (!form.checkValidity()) {
-                    form.reportValidity();
-                }
-            },
-
-            async createOrder() {
-                const response = await fetch("/Cart/create-paypal-order", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    }
-                });
-
-                const order = await response.json();
-                return order.id;
-            },
-
-            async onApprove(data) {
-                const paymentMethod = document.getElementById('paypal-button-container').getAttribute('data-method');
-
-                const formData = new FormData(form);
-                const jsonObject = {};
-
-                formData.forEach((value, key) => {
-                    jsonObject[key] = value;
-                });
-
-                jsonObject.PaymentMethod = paymentMethod;
-                jsonObject.OrderId = data.orderID;
-
-                const response = await fetch(`/Cart/capture-paypal-order`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(jsonObject)
-                })
-
-                const details = await response.json();
-
-                if (details == "success") {
-                    window.location.href = "/Cart/PaymentSuccess";
-                }
-                else {
-                    alert("Transaction not completed");
-                }
-            }
-        }).render('#paypal-button-container');
-    </script>
+    <script src="~/js/checkOut/checkOut.js"></script>
+    <script src="~/js/checkOut/paypal.js"></script>
     <script>
         function toggleIcon(button) {
             var icon = button.querySelector('i');

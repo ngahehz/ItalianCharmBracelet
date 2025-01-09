@@ -25,7 +25,7 @@ public partial class Voucher
 
     public string? Note { get; set; }
 
-    public string? State { get; set; }
+    public int? State { get; set; }
 
     public virtual ICollection<SalesInvoice> SalesInvoices { get; set; } = new List<SalesInvoice>();
 }

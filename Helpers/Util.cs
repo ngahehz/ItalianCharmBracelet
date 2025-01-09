@@ -43,7 +43,9 @@ namespace ItalianCharmBracelet.Helpers
         public static string GenerateID(ItalianCharmBraceletContext context, string prefix)
         {
             var maxID = 0;
-            switch (prefix)
+            string temp = !string.IsNullOrEmpty(prefix) && prefix.Length >= 5
+                                                        ? prefix.Substring(0, 5) : prefix;
+            switch (temp)
             {
                 case "KH":
                     maxID = context.Customers.Any() ? context.Customers
@@ -51,22 +53,44 @@ namespace ItalianCharmBracelet.Helpers
                                 .Select(c => int.Parse(c.Id.Substring(2))) 
                                 .Max() : 0;
                     return $"{prefix}{(maxID + 1).ToString().PadLeft(5, '0')}";
+
                 case "HDB":
                     maxID = context.SalesInvoices.Any() ? context.SalesInvoices
                                 .AsEnumerable()
                                 .Select(c => int.Parse(c.Id.Substring(3)))
                                 .Max() : 0;
                     return $"{prefix}{(maxID + 1).ToString().PadLeft(6, '0')}";
-                case "HD":
-                    maxID = context.Customers.Select(c => int.Parse(c.Id.Substring(2)))
-                        .DefaultIfEmpty(0)
-                        .Max();
-                    return $"{prefix}{(maxID + 1).ToString().PadLeft(8, '0')}";
-                case "CTHD":
-                    maxID = context.Customers.Select(c => int.Parse(c.Id.Substring(2)))
-                        .DefaultIfEmpty(0)
-                        .Max();
-                    return $"{prefix}{(maxID + 1).ToString().PadLeft(10, '0')}";
+
+                case "HDN":
+                    maxID = context.PurchaseInvoices.Any() ? context.PurchaseInvoices
+                                .AsEnumerable()
+                                .Select(c => int.Parse(c.Id))
+                                .Max() : 99999;
+                    return $"{maxID + 1}";
+
+                case "VC":
+                    maxID = context.Vouchers.Any() ? context.Vouchers
+                                .AsEnumerable()
+                                .Select(c => int.Parse(c.Id))
+                                .Max() : 99;
+                    return $"{maxID + 1}";
+
+                case "CHARM":
+                    maxID = context.Charms.Any() ? context.Charms
+                                .AsEnumerable()
+                                .Where(c => c.Id.StartsWith(prefix))
+                                .Select(c => int.Parse(c.Id.Substring(8)))
+                                .Max() : 0;
+                    return $"{prefix}_{(maxID + 1).ToString().PadLeft(3, '0')}";
+
+                case "COMBO":
+                    maxID = context.Charms.Any() ? context.Charms
+                                .AsEnumerable()
+                                .Where(c => c.Id.StartsWith(temp))
+                                .Select(c => int.Parse(c.Id.Substring(8)))
+                                .Max() : 0;
+                    return $"{prefix}_{(maxID + 1).ToString().PadLeft(3, '0')}";
+
                 default:
                     return string.Empty;
             }

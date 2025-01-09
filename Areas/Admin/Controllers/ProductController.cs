@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using X.PagedList;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using ItalianCharmBracelet.Helpers;
 
 namespace ItalianCharmBracelet.Areas.Admin.Controllers
 {
@@ -56,6 +57,11 @@ namespace ItalianCharmBracelet.Areas.Admin.Controllers
         public IActionResult AddProduct()
         {
             ViewBag.CateId = new SelectList(_context.Categories, "Id", "Name");
+            var charmGroups = _context.Charms
+                            .GroupBy(c => c.Id.Substring(0, 7))
+                            .Select(g => g.Key)
+                            .ToList();
+            ViewBag.ProId = new SelectList(charmGroups);
             return View();
         }
 
@@ -68,11 +74,17 @@ namespace ItalianCharmBracelet.Areas.Admin.Controllers
             {
                 //var charm = new Charm();
                 //charm = Mapper.Map<CharmViewModel, Charm>(model);
+                model.Id = Util.GenerateID(_context, model.Id);
                 _context.Charms.Add(model);
                 _context.SaveChanges();
                 return RedirectToAction("Product");
             }
             ViewBag.CateId = new SelectList(_context.Categories, "Id", "Name");
+            var charmGroups = _context.Charms
+                            .GroupBy(c => c.Id.Substring(0, 7))
+                            .Select(g => g.Key)
+                            .ToList();
+            ViewBag.ProId = new SelectList(charmGroups);
             return View(model);
         }
 
@@ -89,6 +101,11 @@ namespace ItalianCharmBracelet.Areas.Admin.Controllers
                 return RedirectToAction("Product");
             }
             ViewBag.CateId = new SelectList(_context.Categories, "Id", "Name");
+            var charmGroups = _context.Charms
+                            .GroupBy(c => c.Id.Substring(0, 7))
+                            .Select(g => g.Key)
+                            .ToList();
+            ViewBag.ProId = new SelectList(charmGroups);
             return View(charm);
         }
 
@@ -104,6 +121,11 @@ namespace ItalianCharmBracelet.Areas.Admin.Controllers
                 return RedirectToAction("Product");
             }
             ViewBag.CateId = new SelectList(_context.Categories, "Id", "Name");
+            var charmGroups = _context.Charms
+                            .GroupBy(c => c.Id.Substring(0, 7))
+                            .Select(g => g.Key)
+                            .ToList();
+            ViewBag.ProId = new SelectList(charmGroups);
             return View(model);
         }
 

@@ -5,12 +5,12 @@
     @Html.ValidationSummary(true, "", new { @class = "text-danger" })
     <div>
         <label asp-for="@Model.Username" class="form-label" style="margin-bottom: 0.2rem;"></label><sup>*</sup>
-        <input asp-for="@Model.Username" class="form-control" style="margin-top: 0.2rem;">
+        <input asp-for="@Model.Username" class="form-control" style="margin-top: 0.2rem;" value="s">
         <span asp-validation-for="@Model.Username" class="text-danger"></span>
     </div>
     <div>
         <label asp-for="@Model.Password" class="form-label mt-5" style="margin-bottom: 0.2rem;"></label><sup>*</sup>
-        <input asp-for="@Model.Password" class="form-control" style="margin-bottom: 0.2rem;">
+        <input asp-for="@Model.Password" class="form-control" style="margin-bottom: 0.2rem;" value="123456">
         <span asp-validation-for="@Model.Password" class="text-danger"></span>
         <p class="small pb-lg-2 d-flex justify-content-end"><a class="" href="#!">Forgot password?</a></p>
     </div>

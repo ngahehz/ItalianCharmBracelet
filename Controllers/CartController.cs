@@ -5,6 +5,8 @@ using ItalianCharmBracelet.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using ItalianCharmBracelet.Services;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace ItalianCharmBracelet.Controllers
 {
@@ -64,7 +66,7 @@ namespace ItalianCharmBracelet.Controllers
 
             if (item == null)
             {
-                if(hangHoa.CateId == "100" && (hangHoa.Quantity < quantity || hangHoa.Quantity == null))
+                if (hangHoa.CateId == "100" && (hangHoa.Quantity < quantity || hangHoa.Quantity == null))
                 {
                     return Json(new
                     {
@@ -94,7 +96,7 @@ namespace ItalianCharmBracelet.Controllers
                         remove = true,
                     });
                 }
-                if(item.Quantity > hangHoa.Quantity)
+                if (item.Quantity > hangHoa.Quantity)
                 {
                     item.Quantity = (int)hangHoa.Quantity;
                     return Json(new
@@ -136,36 +138,167 @@ namespace ItalianCharmBracelet.Controllers
             });/* ê cần sửa chỗ này nha trời*/
         }
 
+        public IActionResult SaveVoucher([FromBody] JsonElement data)
+        {
+            if (data.TryGetProperty("inputData", out JsonElement inputDataElement))
+            {
+                string inputData = inputDataElement.GetString();
+
+                HttpContext.Session.SetString("InputData", inputData);
+                return Ok();
+            }
+            return BadRequest("Dữ liệu không hợp lệ");
+            //HttpContext.Session.SetString("InputData", (string)data.inputData);
+            //return Ok();
+        }
+
+        [Authorize]
+        public IActionResult AddVoucher(string code, double Subtotal)
+        {
+            var voucher = _context.Vouchers.SingleOrDefault(p => p.Code == code && p.State > 0);
+            if (voucher == null)
+            {
+                //ModelState.AddModelError("", "Mã voucher không tồn tại");
+                return Json(new
+                {
+                    success = false,
+                    message = "Mã voucher không tồn tại",
+                });
+
+                //TempData["error"] = "Mã không tồn tại";
+                //return RedirectToAction("Index");
+            }
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            if (today < voucher.StartDate)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Voucher chưa có hiệu lực",
+                });
+            }
+            if (today > voucher.EndDate)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Voucher đã hết hạn",
+                });
+            }
+            if (voucher.State == 0)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Số lượng voucher đã hết",
+                });
+            }
+            if (voucher.DiscountAmount != null)
+            {
+                if (Subtotal >= voucher.MinInvoiceValue)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        promotion = voucher.DiscountAmount,
+                        message = voucher.Discription
+                    });
+                    //ViewBag.promotion = voucher.DiscountAmount;
+                }
+                else
+                {
+                    //ModelState.AddModelError("", "Giá trị tối thiểu là " + voucher.MinInvoiceValue);
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Đơn hàng chưa đạt giá trị tối thiểu (" + voucher.MinInvoiceValue + ")",
+                    });
+                }
+            }
+            else
+            {
+                return Json(new
+                {
+                    success = true,
+                    promotion = Subtotal * voucher.PercentDiscount > voucher.MaxDiscount ? voucher.MaxDiscount : Subtotal * voucher.PercentDiscount,
+                    message = voucher.Discription
+                });
+            }
+        }
+
         #region Checkout
         [Authorize]
         [HttpGet]
         public IActionResult Checkout()
         {
-			var greetings = new List<string>
-			{
-				"You're one step away from happiness! 🛍️✨",
-				"Securely completing your payment... 💳🔒",
-				"Let’s wrap this up! 🎁 Your order is almost on its way!",
-				"Shopping made easy! 🛒💖 Just fill in your details and you're done!",
-				"You're about to make your day brighter! ☀️💳",
-				"Your payment is 100% secure with us! 🛡️✨",
-				"We value your trust! 🔒💙 Pay securely and confidently!",
-				"Final stretch! 🏁✨ Your goodies are almost yours!",
-				"We can't wait to pack your order! 📦✨"
-			};
+            var greetings = new List<string>
+            {
+                "You're one step away from happiness! 🛍️✨",
+                "Securely completing your payment... 💳🔒",
+                "Let’s wrap this up! 🎁 Your order is almost on its way!",
+                "Shopping made easy! 🛒💖 Just fill in your details and you're done!",
+                "You're about to make your day brighter! ☀️💳",
+                "Your payment is 100% secure with us! 🛡️✨",
+                "We value your trust! 🔒💙 Pay securely and confidently!",
+                "Final stretch! 🏁✨ Your goodies are almost yours!",
+                "We can't wait to pack your order! 📦✨"
+            };
 
-			var random = new Random();
-			var randomGreeting = greetings[random.Next(greetings.Count)];
+            var random = new Random();
+            var randomGreeting = greetings[random.Next(greetings.Count)];
 
-			// Truyền câu ngẫu nhiên vào View thông qua ViewData
-			ViewData["RandomGreetingCheckout"] = randomGreeting;
+            // Truyền câu ngẫu nhiên vào View thông qua ViewData
+            ViewData["RandomGreetingCheckout"] = randomGreeting;
 
-			if (Cart.Count == 0)
+            //string code = HttpContext.Session.GetString("InputData");
+            //ViewBag.InputData = code;
+
+            if (Cart.Count == 0)
             {
                 return RedirectToAction("Index");
             }
             ViewBag.PaypalClientId = _paypalClient.ClientId;
             return View(Cart);
+        }
+        public IActionResult CheckVoucherAvailability()
+        {
+            double discount = CheckDiscount();
+            if (discount == -1)
+                return Json(new
+                {
+                    success = true,
+                    message = "Không nhập voucher",
+                });
+            if (discount == 0)
+                return Json(new
+                {
+                    success = false,
+                    message = "Số lượng voucher đã hết",
+                });
+            return Json(new
+            {
+                success = true,
+                message = "Voucher hợp lệ",
+            });
+        }
+
+        public double CheckDiscount()
+        {
+            string code = HttpContext.Session.GetString("InputData");
+            double totalPayment = Cart.Sum(p => p.Total);
+
+            var voucher = _context.Vouchers.SingleOrDefault(p => p.Code == code);
+
+            if (voucher != null)
+            {
+                if (voucher.State == 0)
+                    return 0;
+                if (voucher.DiscountAmount != null)
+                    return (double)voucher.DiscountAmount;
+                else
+                    return (double)(totalPayment * voucher.PercentDiscount > voucher.MaxDiscount ? voucher.MaxDiscount : totalPayment * voucher.PercentDiscount);
+            }
+            return -1;
         }
 
         [Authorize]
@@ -174,6 +307,18 @@ namespace ItalianCharmBracelet.Controllers
         {
             if (ModelState.IsValid)
             {
+                string code = HttpContext.Session.GetString("InputData");
+                var voucher = _context.Vouchers.SingleOrDefault(p => p.Code == code);
+                var totalPayment = Cart.Sum(p => p.Total);
+                double discount = CheckDiscount();
+                if (discount == 0)
+                {
+                    ModelState.AddModelError("", "Số lượng voucher đã hết");
+                    return PartialView("FormCheckout", model);
+                }
+                if (discount == -1)
+                    discount = 0;
+
                 var customerId = HttpContext.User.Claims.SingleOrDefault(p => p.Type == MySetting.CLAIM_CUSTOMER).Value;
                 var hoadon = new SalesInvoice()
                 {
@@ -185,8 +330,9 @@ namespace ItalianCharmBracelet.Controllers
                     Note = model.Note,
                     Date = DateOnly.FromDateTime(DateTime.Now),
                     StateId = "0",
+                    VoucherId = voucher?.Id,
                     PaymentMethod = model.PaymentMethod,
-                    TotalPayment = Cart.Sum(p => p.Total)
+                    TotalPayment = totalPayment - discount,
                 };
 
                 if (model.PaymentMethod == "VnPay")
@@ -194,7 +340,7 @@ namespace ItalianCharmBracelet.Controllers
                     HttpContext.Session.Set("HOADONVNPAY", hoadon);
                     var vnpayModel = new VnpaymentRequestModel
                     {
-                        Amount = Cart.Sum(p => p.Price),
+                        Amount = totalPayment - discount,
                         CreatedDate = DateTime.Now,
                         Description = $"{model.Cell}",
                         FullName = model.Name,
@@ -208,10 +354,12 @@ namespace ItalianCharmBracelet.Controllers
                 if (success)
                 {
                     HttpContext.Session.Set<List<CartItemVM>>(MySetting.CART_KEY, new List<CartItemVM>());
+                    HttpContext.Session.SetString("InputData", "");
                     //HttpContext.Session.Remove(MySetting.CART_KEY);
                     //return RedirectToAction("PaymentSuccess");
                     return Json(new { success = true, redirectUrl = "/Cart/PaymentSuccess" });
                 }
+
             }
             return PartialView("FormCheckout", model);
             //return View(Cart);
@@ -261,7 +409,19 @@ namespace ItalianCharmBracelet.Controllers
         [HttpPost("/Cart/create-paypal-order")]
         public async Task<IActionResult> CreatePaypalOrder(CancellationToken cancellationToken)
         {
-            var value = Cart.Sum(p => p.Total).ToString();
+            var totalPayment = Cart.Sum(p => p.Total);
+            double discount = CheckDiscount();
+            if (discount == 0)
+            {
+                //ModelState.AddModelError("", "Lỗi hệ thống");
+                return new JsonResult(new { Id = "" });
+            }
+            if (discount == -1)
+                discount = 0;
+            const double VndToUsdRate = 24000; 
+            var totalInUsd = Math.Round((totalPayment - discount) / VndToUsdRate, 2);
+
+            var value = totalInUsd.ToString();
             var currency = "USD";
             var madonhangthamchieu = "DH" + DateTime.Now.Ticks.ToString();
 
@@ -281,97 +441,118 @@ namespace ItalianCharmBracelet.Controllers
         {
             if (formData != null)
             {
-                string paymentMethod = formData["PaymentMethod"];
-                string orderId = formData["OrderId"];
-
-                var jsonResponse = await _paypalClient.CaptureOrder(orderId);
-
-                if (jsonResponse != null)
+                try
                 {
-                    string paypalOrderStatus = jsonResponse["status"]?.ToString() ?? "";
-                    if (paypalOrderStatus == "COMPLETED")
-                    {
-                        var customerId = HttpContext.User.Claims.SingleOrDefault(p => p.Type == MySetting.CLAIM_CUSTOMER).Value;
-                        var hoadon = new SalesInvoice()
-                        {
-                            Id = Util.GenerateID(_context, "HDB"),
-                            CustomerId = customerId,
-                            Name = formData["Name"],
-                            Address = formData["Address"],
-                            Cell = formData["Cell"],
-                            Note = formData["Note"],
-                            Date = DateOnly.FromDateTime(DateTime.Now),
-                            StateId = "0",
-                            PaymentMethod = paymentMethod,
-                            TotalPayment = Cart.Sum(p => p.Total)
-                        };
+                    string paymentMethod = formData["PaymentMethod"];
+                    string orderId = formData["OrderId"];
 
-                        var success = UpdateDatebase(hoadon);
-                        if (success)
+                    var jsonResponse = await _paypalClient.CaptureOrder(orderId);
+
+                    if (jsonResponse != null)
+                    {
+                        string paypalOrderStatus = jsonResponse["status"]?.ToString() ?? "";
+                        if (paypalOrderStatus == "COMPLETED")
                         {
-                            HttpContext.Session.Set<List<CartItemVM>>(MySetting.CART_KEY, new List<CartItemVM>());
-                            //HttpContext.Session.Remove(MySetting.CART_KEY);
-                            return new JsonResult("success");
+                            string code = HttpContext.Session.GetString("InputData");
+                            var voucher = _context.Vouchers.SingleOrDefault(p => p.Code == code);
+                            var totalPayment = Cart.Sum(p => p.Total);
+                            double discount = CheckDiscount();
+                            if (discount == 0)
+                            {
+                                return new JsonResult("error");
+                            }
+                            if (discount == -1)
+                                discount = 0;
+
+                            var customerId = HttpContext.User.Claims.SingleOrDefault(p => p.Type == MySetting.CLAIM_CUSTOMER).Value;
+                            var hoadon = new SalesInvoice()
+                            {
+                                Id = Util.GenerateID(_context, "HDB"),
+                                CustomerId = customerId,
+                                Name = formData["Name"],
+                                Address = formData["Address"],
+                                Cell = formData["Cell"],
+                                Note = formData["Note"],
+                                Date = DateOnly.FromDateTime(DateTime.Now),
+                                StateId = "0",
+                                VoucherId = voucher?.Id,
+                                PaymentMethod = paymentMethod,
+                                TotalPayment = totalPayment - discount,
+                            };
+
+                            var success = UpdateDatebase(hoadon);
+                            if (success)
+                            {
+                                HttpContext.Session.Set<List<CartItemVM>>(MySetting.CART_KEY, new List<CartItemVM>());
+                                HttpContext.Session.SetString("InputData", "");
+                                //HttpContext.Session.Remove(MySetting.CART_KEY);
+                                return new JsonResult("success");
+                            }
+                            return new JsonResult("error but completed");
                         }
-                        return new JsonResult("error but completed");
                     }
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"Lỗi trong CreatePaypalOrder: {ex.Message}");
+                    return new JsonResult(new { Id = "", Message = "Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau." });
                 }
             }
             return new JsonResult("error");
         }
 
 
-		//public async Task<IActionResult> CreatePaypalOrder(CancellationToken cancellationToken)
-		//{
-		//    //Thông tin đơn hàng gửi qua paypal
-		//    var tongtien = Cart.Sum(p => p.Total).ToString();
-		//    var donvitiente = "USD";
-		//    var madonhangthamchieu = "DH" + DateTime.Now.Ticks.ToString();
-		//    try
-		//    {
-		//        var response = await _paypalClient.CreateOrder(tongtien, donvitiente, madonhangthamchieu);
-		//        return Ok(response);
-		//    }
-		//    catch (Exception ex)
-		//    {
-		//        var error = new { ex.GetBaseException().Message };
-		//        return BadRequest(error);
-		//    }
-		//}
+        //public async Task<IActionResult> CreatePaypalOrder(CancellationToken cancellationToken)
+        //{
+        //    //Thông tin đơn hàng gửi qua paypal
+        //    var tongtien = Cart.Sum(p => p.Total).ToString();
+        //    var donvitiente = "USD";
+        //    var madonhangthamchieu = "DH" + DateTime.Now.Ticks.ToString();
+        //    try
+        //    {
+        //        var response = await _paypalClient.CreateOrder(tongtien, donvitiente, madonhangthamchieu);
+        //        return Ok(response);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        var error = new { ex.GetBaseException().Message };
+        //        return BadRequest(error);
+        //    }
+        //}
 
-		//public async Task<IActionResult> CapturePaypalOrder(string orderId, CancellationToken cancellationToken)
-		//{
-		//    try
-		//    {
-		//        var response = await _paypalClient.CaptureOrder(orderId);
-		//        //Lưu database
-		//        return Ok(response);
-		//    }
-		//    catch (Exception ex)
-		//    {
-		//        var error = new { ex.GetBaseException().Message };
-		//        return BadRequest(error);
-		//    }
-		//}
+        //public async Task<IActionResult> CapturePaypalOrder(string orderId, CancellationToken cancellationToken)
+        //{
+        //    try
+        //    {
+        //        var response = await _paypalClient.CaptureOrder(orderId);
+        //        //Lưu database
+        //        return Ok(response);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        var error = new { ex.GetBaseException().Message };
+        //        return BadRequest(error);
+        //    }
+        //}
 
-		#endregion
+        #endregion
 
-		#region VnPay
-		[Authorize]
+        #region VnPay
+        [Authorize]
         public IActionResult PaymentCallBack()
         {
             var response = _vnPayService.PaymentExecute(Request.Query);
             if (response == null || response.VnPayResponseCode != "00")
             {
-				string text = $"Lỗi thanh toán VN Pay: {response?.VnPayResponseCode ?? "Không xác định"}";
-				return RedirectToAction("PaymentFailure", new { text = text });
-			}
+                string text = $"Lỗi thanh toán VN Pay: {response?.VnPayResponseCode ?? "Không xác định"}";
+                return RedirectToAction("PaymentFailure", new { text = text });
+            }
 
             var hoadon = HttpContext.Session.Get<SalesInvoice>("HOADONVNPAY");
             var success = UpdateDatebase(hoadon);
             if (!success)
             {
-				return RedirectToAction("PaymentFailure", "Liên hệ admin để được xử lý");
+                return RedirectToAction("PaymentFailure", "Liên hệ admin để được xử lý");
             }
             HttpContext.Session.Set<List<CartItemVM>>(MySetting.CART_KEY, new List<CartItemVM>());
             return RedirectToAction("PaymentSuccess");
@@ -385,8 +566,8 @@ namespace ItalianCharmBracelet.Controllers
 
         public IActionResult PaymentFailure(string text)
         {
-			ViewBag.ErrorMessage = text ?? "Đã xảy ra lỗi trong quá trình thanh toán.";
-			return View("Failure");
+            ViewBag.ErrorMessage = text ?? "Đã xảy ra lỗi trong quá trình thanh toán.";
+            return View("Failure");
         }
     }
 }
