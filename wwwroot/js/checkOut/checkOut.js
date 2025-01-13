@@ -6,7 +6,7 @@
     formData.push({ name: "PaymentMethod", value: paymentMethod });
 
     $.ajax({
-        url: "/Cart/Checkout",
+        url: "/Checkout/Index",
         type: "POST",
         data: formData,
         success: function (response) {

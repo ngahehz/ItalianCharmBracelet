@@ -1,0 +1,112 @@
+﻿@model IEnumerable<ItalianCharmBracelet.ViewModels.CartItemVM>
+@{
+    ViewData["Title"] = "Checkout";
+}
+
+<!-- Single Page Header start -->
+<div class="container-fluid page-header py-5">
+    <h1 class="text-center text-white display-6">Checkout</h1>
+    <ol class="breadcrumb justify-content-center mb-0">
+        <li class="breadcrumb-item text-center text-white">@ViewData["RandomGreetingCheckout"]</li>
+    </ol>
+</div>
+<!-- Single Page Header End -->
+<!-- Checkout Page Start -->
+<div class="container-fluid py-5">
+    <div class="container py-5">
+        <h1 class="mb-4">Billing details</h1>
+        <form method="post" asp-action="Index" asp-controller="Checkout" id="formCheckout">
+            <div class="row g-5">
+                <div class="col-md-12 col-lg-6 col-xl-7 px-5" id="checkout_form">
+                    @await Html.PartialAsync("FormCheckout", new CheckoutVM())
+                </div>
+
+                <div class="col-md-12 col-lg-6 col-xl-5">
+                    <button onclick="toggleIcon(this)" class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                        Order Items <i class="fas fa-chevron-down ms-2"></i>
+                    </button>
+
+                    <!-- Vùng có thể mở/đóng -->
+                    <div class="collapse" id="collapseExample">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Products</th>
+                                        <th scope="col">Name</th>
+                                        <th scope="col">Price</th>
+                                        <th scope="col">Quantity</th>
+                                        <th scope="col">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model)
+                                    {
+                                        <tr>
+                                            <th scope="row">
+                                                <div class="d-flex align-items-center mt-2">
+                                                    <img src="~/img/charm/@(item.CateId == "100" ? "available" : (item.CateId == "101" ? "order" : (item.CateId == "102" ? "design" : "")))/@item.Img" class="img-fluid rounded-circle" style="width: 90px; height: 90px;" alt="@item.Name">
+                                                </div>
+                                            </th>
+                                            <td class="py-5">@item.Name</td>
+                                            <td class="py-5">@string.Format("{0:N0}", item.Price) VNĐ</td>
+                                            <td class="py-5">@item.Quantity</td>
+                                            <td class="py-5">@string.Format("{0:N0}", item.Total) VNĐ</td>
+                                        </tr>
+                                    }
+
+                                    <tr>
+                                        <th scope="row">
+                                        </th>
+                                        <td class="py-5">
+                                            <p class="mb-0 text-dark text-uppercase py-3">TOTAL</p>
+                                        </td>
+                                        <td class="py-5"></td>
+                                        <td class="py-5"></td>
+                                        <td class="py-5">
+                                            <div class="py-3 border-bottom border-top">
+                                                <p class="mb-0 text-dark">@string.Format("{0:N0}", Model.Sum(p => p.Total)) VNĐ</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    @* <input type="text" name="Voucher" value="@ViewBag.InputData" readonly /> *@
+                    <div class="form-item mt-3">
+                        <button value="COD" type="submit" class="btn border-secondary py-3 px-4 text-uppercase w-100 text-primary">Place Order</button>
+                    </div>
+                    <div class="form-item mt-3">
+                        <button value="VnPay" type="submit" class="btn border-secondary py-3 px-4 text-uppercase w-100 text-primary">VNPAY</button>
+                    </div>
+                    <div data-method="Paypal" id="paypal-button-container" class="form-item mt-3"></div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- Checkout Page End -->
+@section Scripts {
+    <script src="https://www.paypal.com/sdk/js?client-id=@ViewBag.PaypalClientId"></script>
+
+    <script src="~/js/checkOut/checkOut.js"></script>
+    <script src="~/js/checkOut/paypal.js"></script>
+    <script>
+        function toggleIcon(button) {
+            var icon = button.querySelector('i');
+
+            // Kiểm tra nếu mũi tên đang chỉ xuống, chuyển nó thành chỉ lên, ngược lại
+            if (icon.classList.contains('fa-chevron-down')) {
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            } else {
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.13/jquery.validate.unobtrusive.min.js"></script>
+
+}

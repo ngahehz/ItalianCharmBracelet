@@ -3,7 +3,7 @@
     if (isAuthenticated) {
         saveVoucher()
     } else {
-        showLoginModal('/Cart/Checkout')
+        showLoginModal('/Checkout/Index')
     }
 }
 
@@ -18,7 +18,7 @@ function saveVoucher() {
         contentType: 'application/json',
         data: JSON.stringify({ inputData: data }),
         success: function () {
-            window.location.href = '/Cart/Checkout';
+            window.location.href = '/Checkout/Index';
         },
         error: function (xhr, status, error) {
             console.error("Lỗi khi gửi dữ liệu:", error);

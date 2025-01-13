@@ -1,6 +1,6 @@
 ﻿async function checkVoucher() {
     try {
-        const response = await fetch('/Cart/CheckVoucherAvailability', {
+        const response = await fetch('/Checkout/CheckVoucherAvailability', {
             method: 'GET',
         });
         if (!response.ok) throw new Error('Lỗi khi gọi API');
@@ -22,34 +22,39 @@
             tagline: 'false'
         },
 
-        onInit(data, actions) {
-            actions.disable();
-            form.addEventListener('input', async function (event) {
+        onClick: function (data, actions) {
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return Promise.reject();
+            }
+
+            return fetch('/Checkout/CheckVoucherAvailability', {
+                method: 'get',
+                headers: {
+                    'content-type': 'application/json'
+                }
+            }).then(function (res) {
+                return res.json();
+            }).then(function (data) {
                 if (!form.checkValidity()) {
-                    actions.disable();
+                    form.reportValidity();
+                    alert("Ddien thong tin day du di");
+
+                    return actions.reject();
+                }
+                else if (data.success == false) {
+                    alert(data.message);
+                    return actions.reject();
                 }
                 else {
-                    const result = await checkVoucher();
-                    if (result.success == false) {
-                        actions.disable();
-                        alert(actions.message);
-                    } else {
-                        actions.enable();
-                        //temp = result.discount;
-                    }
+                    return actions.resolve();
                 }
             });
         },
 
-        onClick() {
-            if (!form.checkValidity()) {
-                form.reportValidity();
-            }
-        },
-
         async createOrder() {
             try {
-                const response = await fetch("/Cart/create-paypal-order", {
+                const response = await fetch("/Checkout/create-paypal-order", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -97,7 +102,7 @@
                 jsonObject.PaymentMethod = paymentMethod;
                 jsonObject.OrderId = data.orderID;
 
-                const response = await fetch(`/Cart/capture-paypal-order`, {
+                const response = await fetch(`/Checkout/capture-paypal-order`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -108,7 +113,7 @@
                 const details = await response.json();
 
                 if (details === "success") {
-                    window.location.href = "/Cart/PaymentSuccess";
+                    window.location.href = "/Checkout/PaymentSuccess";
                 } else {
                     alert("Transaction not completed");
                 }

@@ -11,8 +11,9 @@ function addVoucher(subtotal) {
             Subtotal: subtotal
         },
         success: function (response) {
+            var element = document.getElementById('promotion');
+
             if (response.success) {
-                var element = document.getElementById('promotion');
                 if (element) {
                     element.textContent = toMoneyFormat(response.promotion) + " VNĐ";
                     message.textContent = "Bạn áp thành công mã '" + response.message + "'";
